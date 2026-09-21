@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { MarginTrendKpi, PaymentDonutChart, RevenueLineChart, StockHealthGauge, TopProductsChart, TransactionBarsChart } from "@/components/dashboard-charts";
 
@@ -26,7 +25,6 @@ export default async function DashboardPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Your operation, at a glance.</h1>
           <p className="mt-2 max-w-xl text-sm text-slate-400">A calm view of what needs your attention today. You are signed in as <span className="text-slate-200">{role.replace("_", " ")}</span>.</p>
         </div>
-        <Link href="/onboarding" className="mt-5 inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-ink shadow-halo transition hover:bg-accent/90 sm:absolute sm:right-7 sm:top-7 sm:mt-0">Configure workspace <span>↗</span></Link>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

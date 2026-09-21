@@ -1,31 +1,71 @@
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { createSession } from "@/lib/auth";
+import { canAccess, createSession, getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { onboardingSchema } from "@/lib/validation";
+import { onboardingSchema, workspaceSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
-  const parsed = onboardingSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Check the highlighted setup fields." }, { status: 400 });
+  const body = await request.json().catch(() => null);
+  const session = await getSession();
+
+  if (session) {
+    if (!session.businessId || !canAccess(session.role, "ADMIN")) {
+      return NextResponse.json({ error: "Only an administrator can update workspace settings." }, { status: 403 });
+    }
+
+    const parsed = workspaceSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        error: "Check the business name and business type.",
+        fields: parsed.error.flatten().fieldErrors
+      }, { status: 400 });
+    }
+
+    const business = await db.business.update({
+      where: { id: session.businessId },
+      data: { name: parsed.data.businessName, type: parsed.data.businessType }
+    });
+    return NextResponse.json({ ok: true, businessId: business.id, updated: true });
+  }
+
+  const parsed = onboardingSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({
+      error: "Complete all required account fields.",
+      fields: parsed.error.flatten().fieldErrors
+    }, { status: 400 });
+  }
 
   const existing = await db.user.findUnique({ where: { email: parsed.data.email } });
   if (existing) return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
 
-  const business = await db.business.create({
-    data: {
-      name: parsed.data.businessName,
-      type: parsed.data.businessType,
-      users: {
-        create: {
-          name: parsed.data.ownerName,
-          email: parsed.data.email,
-          passwordHash: await bcrypt.hash(parsed.data.password, 12),
-          role: "SUPER_ADMIN"
+  let business;
+  try {
+    business = await db.business.create({
+      data: {
+        workspaceKey: "PRIMARY",
+        name: parsed.data.businessName,
+        type: parsed.data.businessType,
+        users: {
+          create: {
+            name: parsed.data.ownerName,
+            email: parsed.data.email,
+            passwordHash: await bcrypt.hash(parsed.data.password, 12),
+            role: "SUPER_ADMIN"
+          }
         }
-      }
-    },
-    include: { users: true }
-  });
+      },
+      include: { users: true }
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({
+        error: "A workspace has already been created. Sign in to manage it instead of creating another workspace."
+      }, { status: 409 });
+    }
+    throw error;
+  }
   const owner = business.users[0];
   await createSession({
     userId: owner.id,

@@ -1,8 +1,12 @@
 import { getSession } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { OnboardingForm } from "@/components/onboarding-form";
+import { redirect } from "next/navigation";
 
 export default async function OnboardingPage() {
   const session = await getSession();
+  if (session?.businessId) redirect("/dashboard");
+  if (await db.business.count()) redirect("/sign-in?workspace=exists");
   return (
     <div className="flex min-h-screen flex-col bg-ink px-5 py-10 sm:px-8">
       <div className="mx-auto w-full max-w-2xl flex-1">

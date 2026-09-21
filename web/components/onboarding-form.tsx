@@ -7,6 +7,14 @@ import type { BusinessType } from "@/lib/validation";
 
 const types: { value: BusinessType; label: string; description: string }[] = [
   { value: "RETAIL", label: "Retail", description: "Shop, convenience, or general goods" },
+  { value: "BEAUTY_SALON", label: "Beauty salon", description: "Salon, spa, or wellness studio" },
+  { value: "BOUTIQUE", label: "Boutique", description: "Fashion, clothing, or accessories" },
+  { value: "ELECTRICAL", label: "Electrical store", description: "Electrical supplies and equipment" },
+  { value: "COMPUTER_REPAIR", label: "Computer repair", description: "Repairs, servicing, and support" },
+  { value: "ELECTRONICS", label: "Electronics", description: "Consumer electronics and devices" },
+  { value: "PHARMACY", label: "Pharmacy", description: "Medicines and health products" },
+  { value: "GAS_PETROL_STATION", label: "Gas and petrol station", description: "Fuel, LPG, and forecourt sales" },
+  { value: "GROCERY", label: "Grocery", description: "Food, household, and daily essentials" },
   { value: "HOSPITALITY", label: "Hospitality", description: "Cafe, restaurant, or bar" },
   { value: "SERVICE", label: "Service", description: "Appointments or service counter" },
   { value: "FUEL", label: "Fuel", description: "Forecourt or fuel station" },
@@ -24,8 +32,11 @@ export function OnboardingForm({ authenticated }: { authenticated: boolean }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setSaving(true); setError("");
-    const response = await fetch("/api/auth/onboarding", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...values, businessType }) });
-    const result = await response.json();
+    const payload = authenticated
+      ? { businessName: values.businessName, businessType }
+      : { ...values, businessType };
+    const response = await fetch("/api/auth/onboarding", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    const result = await response.json().catch(() => ({}));
     if (!response.ok) { setError(result.error ?? "Unable to save setup."); setSaving(false); return; }
     setBusiness(values.businessName, businessType);
     router.push("/dashboard");

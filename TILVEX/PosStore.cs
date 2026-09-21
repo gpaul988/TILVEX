@@ -113,6 +113,15 @@ public sealed class PosStore
         return account;
     }
 
+    public void ImportSharedProfile(UserAccount account, BusinessSettings settings)
+    {
+        Data.Users.RemoveAll(user => user.Email.Equals(account.Email, StringComparison.OrdinalIgnoreCase));
+        Data.Users.Add(account);
+        Data.Settings.BusinessName = settings.BusinessName;
+        Data.Settings.BusinessType = settings.BusinessType;
+        Save();
+    }
+
     public static string ComputePasswordHash(string password)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password.Trim()));

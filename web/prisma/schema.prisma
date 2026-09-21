@@ -17,6 +17,14 @@ enum Role {
 
 enum BusinessType {
   RETAIL
+  BEAUTY_SALON
+  BOUTIQUE
+  ELECTRICAL
+  COMPUTER_REPAIR
+  ELECTRONICS
+  PHARMACY
+  GAS_PETROL_STATION
+  GROCERY
   HOSPITALITY
   SERVICE
   FUEL
@@ -25,6 +33,7 @@ enum BusinessType {
 
 model Business {
   id           String       @id @default(cuid())
+  workspaceKey String?      @unique
   name         String
   type         BusinessType
   currency     String       @default("GBP")

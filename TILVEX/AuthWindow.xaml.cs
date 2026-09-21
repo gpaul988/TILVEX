@@ -12,7 +12,7 @@ public partial class AuthWindow : Window
         Loaded += (_, _) => LoginEmail.Focus();
     }
 
-    private void LoginButton_Click(object sender, RoutedEventArgs e)
+    private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
         var email = LoginEmail.Text.Trim();
         var password = LoginPassword.Password;
@@ -26,7 +26,22 @@ public partial class AuthWindow : Window
         var user = _store.Authenticate(email, password);
         if (user is null)
         {
-            MessageBox.Show("We could not find a matching account. Check your email and password.", "TILVEX", MessageBoxButton.OK, MessageBoxImage.Error);
+            var remote = await new SharedProfileService(_store.Data.Settings.Integrations).LoginAsync(email, password);
+            if (remote.Account is null || remote.Business is null)
+            {
+                MessageBox.Show("We could not find a matching account. Check your email and password.", "TILVEX", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            _store.ImportSharedProfile(remote.Account, remote.Business);
+            user = remote.Account;
+        }
+
+        var sync = await new SharedProfileService(_store.Data.Settings.Integrations).SyncAsync(user, _store.Data.Settings, password, "LOGIN");
+        if (!sync.Success && sync.Status == IntegrationConnectionStatus.Offline)
+            sync = await new SharedProfileService(_store.Data.Settings.Integrations).SyncAsync(user, _store.Data.Settings, password, "REGISTER");
+        if (!sync.Success && sync.Status == IntegrationConnectionStatus.Error)
+        {
+            MessageBox.Show(sync.Message, "TILVEX", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -34,7 +49,7 @@ public partial class AuthWindow : Window
         OpenMainWindow();
     }
 
-    private void SignupButton_Click(object sender, RoutedEventArgs e)
+    private async void SignupButton_Click(object sender, RoutedEventArgs e)
     {
         var name = SignupName.Text.Trim();
         var email = SignupEmail.Text.Trim();
@@ -56,6 +71,15 @@ public partial class AuthWindow : Window
         if (password.Length < 6)
         {
             MessageBox.Show("Your password must be at least 6 characters long.", "TILVEX", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var pendingAccount = new UserAccount { UserName = name, Email = email };
+        var profileSync = await new SharedProfileService(_store.Data.Settings.Integrations)
+            .SyncAsync(pendingAccount, _store.Data.Settings, password, "REGISTER");
+        if (!profileSync.Success && profileSync.Status == IntegrationConnectionStatus.Error)
+        {
+            MessageBox.Show(profileSync.Message, "TILVEX", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 

@@ -13,6 +13,9 @@ public enum BusinessType
     Pharmacy,
     GasPetrolStation,
     Grocery,
+    Hospitality,
+    Service,
+    Fuel,
     Other
 }
 
@@ -216,6 +219,7 @@ public sealed class IntegrationSettings
 {
     public bool OnlineSyncEnabled { get; set; }
     public string SyncEndpoint { get; set; } = "";
+    public string ProfileSyncEndpoint { get; set; } = "http://localhost:3000";
     public string SyncApiKey { get; set; } = "";
     public string GoogleDriveFolderId { get; set; } = "";
     public string GoogleSheetsSpreadsheetId { get; set; } = "";
