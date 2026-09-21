@@ -1,0 +1,5 @@
+C:\Users\graha\RiderProjects\GreyGas_POS\web\private-downloads\publish\TILVEX.exe
+C:\Users\graha\RiderProjects\GreyGas_POS\web\private-downloads\publish\TILVEX.dll
+C:\Users\graha\RiderProjects\GreyGas_POS\web\private-downloads\publish\TILVEX.deps.json
+C:\Users\graha\RiderProjects\GreyGas_POS\web\private-downloads\publish\TILVEX.runtimeconfig.json
+C:\Users\graha\RiderProjects\GreyGas_POS\web\private-downloads\publish\TILVEX.pdb

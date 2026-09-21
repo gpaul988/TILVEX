@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "wGg2aFEX7bg=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\graha\\RiderProjects\\GreyGas_POS\\TILVEX\\TILVEX.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\graha\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.25\\microsoft.netcore.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\graha\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.25\\microsoft.windowsdesktop.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\graha\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.25\\microsoft.aspnetcore.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\graha\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.25\\microsoft.netcore.app.host.win-x64.8.0.25.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1900",
+      "level": "Warning",
+      "message": "Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.",
+      "projectPath": "C:\\Users\\graha\\RiderProjects\\GreyGas_POS\\TILVEX\\TILVEX.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\graha\\RiderProjects\\GreyGas_POS\\TILVEX\\TILVEX.csproj",
+      "targetGraphs": []
+    }
+  ]
+}

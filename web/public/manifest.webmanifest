@@ -1,0 +1,17 @@
+{
+  "name": "TILVEX POS",
+  "short_name": "TILVEX",
+  "description": "TILVEX POS command centre",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0D0F14",
+  "theme_color": "#00D4AA",
+  "icons": [
+    {
+      "src": "/tilvex-fav.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  CASHIER
+  VIEWER
+}
+
+enum BusinessType {
+  RETAIL
+  HOSPITALITY
+  SERVICE
+  FUEL
+  OTHER
+}
+
+model Business {
+  id           String       @id @default(cuid())
+  name         String
+  type         BusinessType
+  currency     String       @default("GBP")
+  timezone     String       @default("Europe/London")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  users        User[]
+  locations    Location[]
+  syncEvents   SyncEvent[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(CASHIER)
+  businessId   String?
+  business     Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  active      Boolean  @default(true)
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model SyncEvent {
+  id          String   @id @default(cuid())
+  operation   String
+  entity      String
+  payload     String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  processedAt DateTime?
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@index([businessId, status])
+}

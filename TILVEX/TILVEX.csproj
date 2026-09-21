@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>TILVEX</AssemblyName>
+    <RootNamespace>TILVEX</RootNamespace>
+    <ApplicationIcon>Assets\tilvex.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\tilvex.ico" />
+    <Resource Include="Assets\tilvex-icon.png" />
+  </ItemGroup>
+
+</Project>
