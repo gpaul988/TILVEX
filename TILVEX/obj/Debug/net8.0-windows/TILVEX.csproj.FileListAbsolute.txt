@@ -3,7 +3,9 @@ C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\bin\Debug\net8.0-windows\TILVEX.
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\bin\Debug\net8.0-windows\TILVEX.runtimeconfig.json
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\bin\Debug\net8.0-windows\TILVEX.dll
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\bin\Debug\net8.0-windows\TILVEX.pdb
+C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\AuthWindow.baml
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\MainWindow.baml
+C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\AuthWindow.g.cs
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\MainWindow.g.cs
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\App.g.cs
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX_MarkupCompile.cache
@@ -12,11 +14,9 @@ C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.AssemblyInfoInputs.cache
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.AssemblyInfo.cs
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.csproj.CoreCompileInputs.cache
+C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.sourcelink.json
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.dll
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\refint\TILVEX.dll
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.pdb
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.genruntimeconfig.cache
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\ref\TILVEX.dll
-C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\AuthWindow.baml
-C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\AuthWindow.g.cs
-C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.sourcelink.json

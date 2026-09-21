@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
+import { MarginTrendKpi, PaymentDonutChart, RevenueLineChart, StockHealthGauge, TopProductsChart, TransactionBarsChart } from "@/components/dashboard-charts";
 
 const stats = [
   { label: "Today’s sales", value: "£4,286.40", change: "+12.8%", detail: "vs. same day last week", tone: "text-mint" },
@@ -30,6 +31,24 @@ export default async function DashboardPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => <StatCard key={stat.label} {...stat} />)}
+      </section>
+
+      <section>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[.2em] text-accent">Telemetry deck</p>
+            <h2 className="mt-1 text-xl font-semibold text-white">Signals for the next move.</h2>
+          </div>
+          <p className="rounded-md border border-accent/20 bg-accent/5 px-3 py-1.5 text-[10px] uppercase tracking-[.14em] text-slate-400">Demo telemetry · Phase 1 has no sales feed</p>
+        </div>
+        <div className="grid gap-5 xl:grid-cols-2">
+          <RevenueLineChart />
+          <TransactionBarsChart />
+          <PaymentDonutChart />
+          <TopProductsChart />
+          <StockHealthGauge />
+          <MarginTrendKpi />
+        </div>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">

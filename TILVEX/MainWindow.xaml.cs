@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using Microsoft.Win32;
 
 namespace TILVEX;
@@ -31,6 +33,8 @@ public partial class MainWindow : Window
         _integration = new HttpIntegrationService(_store.Data.Settings.Integrations);
         Refresh();
     }
+
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e) => RefreshDashboardCharts();
 
     private void Navigate_Click(object sender, RoutedEventArgs e)
     {
@@ -97,6 +101,205 @@ public partial class MainWindow : Window
         TillStatusText.Text = openTill is null ? "Closed" : "Open";
         UpdateCartTotal();
         RefreshReport();
+        RefreshDashboardCharts();
+    }
+
+    private static readonly Color ChartAccent = Color.FromRgb(0x00, 0xD4, 0xAA);
+    private static readonly Color ChartAccentDark = Color.FromRgb(0x00, 0x7A, 0x5E);
+    private static readonly Color ChartInk = Color.FromRgb(0xE8, 0xED, 0xF3);
+    private static readonly Color ChartMuted = Color.FromRgb(0x71, 0x80, 0x96);
+    private static readonly Color ChartLine = Color.FromRgb(0x26, 0x30, 0x3D);
+
+    private void RefreshDashboardCharts()
+    {
+        if (RevenueTrendCanvas is null) return;
+        DrawRevenueTrend();
+        DrawTopProducts();
+        DrawPaymentDonut();
+        DrawStockHealth();
+        DrawTransactionHours();
+    }
+
+    private static SolidColorBrush ChartBrush(Color color, byte opacity = 255) =>
+        new(Color.FromArgb(opacity, color.R, color.G, color.B));
+
+    private static void AddChartText(Canvas canvas, string text, double left, double top, double fontSize = 10, Color? color = null, bool bold = false)
+    {
+        var label = new TextBlock
+        {
+            Text = text,
+            Foreground = ChartBrush(color ?? ChartMuted),
+            FontSize = fontSize,
+            FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxWidth = Math.Max(40, canvas.ActualWidth - left - 8)
+        };
+        Canvas.SetLeft(label, left);
+        Canvas.SetTop(label, top);
+        canvas.Children.Add(label);
+    }
+
+    private static double ChartWidth(Canvas canvas, double fallback) => canvas.ActualWidth > 120 ? canvas.ActualWidth : fallback;
+
+    private static void AddGridLines(Canvas canvas, double width, double height, int rows = 3)
+    {
+        for (var row = 0; row <= rows; row++)
+        {
+            var y = 12 + (height - 42) * row / rows;
+            canvas.Children.Add(new Line
+            {
+                X1 = 12, X2 = width - 10, Y1 = y, Y2 = y,
+                Stroke = ChartBrush(ChartLine, 190), StrokeThickness = 1,
+                StrokeDashArray = [2, 4]
+            });
+        }
+    }
+
+    private void DrawRevenueTrend()
+    {
+        var canvas = RevenueTrendCanvas;
+        canvas.Children.Clear();
+        var width = ChartWidth(canvas, 420);
+        const double height = 178;
+        var points = Enumerable.Range(0, 7).Select(index =>
+        {
+            var date = DateTime.Today.AddDays(-6 + index);
+            return (Label: date.ToString("ddd"), Value: _store.Data.Sales.Where(s => s.CreatedAt.Date == date.Date).Sum(s => s.Total));
+        }).ToList();
+        var max = points.Max(point => point.Value);
+        RevenueEmptyText.Visibility = max <= 0 ? Visibility.Visible : Visibility.Collapsed;
+        AddGridLines(canvas, width, height);
+        if (max <= 0) return;
+
+        var plotHeight = height - 46;
+        var plotWidth = width - 26;
+        var linePoints = points.Select((point, index) => new Point(
+            13 + plotWidth * index / 6,
+            14 + plotHeight - (double)(point.Value / max) * plotHeight)).ToList();
+        var area = new Polygon { Fill = ChartBrush(ChartAccent, 38), Points = new PointCollection(linePoints.Concat([new Point(linePoints[^1].X, height - 30), new Point(linePoints[0].X, height - 30)])) };
+        canvas.Children.Add(area);
+        canvas.Children.Add(new Polyline { Points = new PointCollection(linePoints), Stroke = ChartBrush(ChartAccent), StrokeThickness = 2.2, Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = ChartAccent, BlurRadius = 10, ShadowDepth = 0, Opacity = .55 } });
+        foreach (var (point, index) in points.Select((value, index) => (value, index)))
+        {
+            canvas.Children.Add(new Ellipse { Width = 6, Height = 6, Fill = ChartBrush(ChartInk), Stroke = ChartBrush(ChartAccent), StrokeThickness = 1.5, ToolTip = $"{point.Label}: {point.Value:C}", Margin = new Thickness(linePoints[index].X - 3, linePoints[index].Y - 3, 0, 0) });
+            AddChartText(canvas, point.Label, linePoints[index].X - 12, height - 25);
+        }
+        AddChartText(canvas, $"{points.Sum(point => point.Value):C}", 13, 13, 12, ChartInk, true);
+    }
+
+    private void DrawTopProducts()
+    {
+        var canvas = TopProductsCanvas;
+        canvas.Children.Clear();
+        var width = ChartWidth(canvas, 300);
+        var products = _store.Data.Sales.SelectMany(s => s.Lines)
+            .GroupBy(line => line.Name).Select(group => (Name: group.Key, Quantity: group.Sum(line => line.Quantity)))
+            .OrderByDescending(item => item.Quantity).Take(5).ToList();
+        TopProductsEmptyText.Visibility = products.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (products.Count == 0) return;
+        var max = products.Max(product => product.Quantity);
+        var barWidth = Math.Max(80, width - 125);
+        foreach (var (product, index) in products.Select((value, index) => (value, index)))
+        {
+            var y = 14 + index * 30;
+            AddChartText(canvas, product.Name, 0, y + 1, 10, ChartInk);
+            canvas.Children.Add(new Rectangle { Width = barWidth * (double)(product.Quantity / max), Height = 11, RadiusX = 3, RadiusY = 3, Fill = ChartBrush(index == 0 ? ChartAccent : ChartAccentDark, (byte)(index == 0 ? 230 : 170)), Margin = new Thickness(112, y, 0, 0), ToolTip = $"{product.Quantity:0.##} units" });
+            AddChartText(canvas, product.Quantity.ToString("0.##"), 116 + barWidth * (double)(product.Quantity / max), y - 2, 10, ChartInk, true);
+        }
+    }
+
+    private void DrawPaymentDonut()
+    {
+        var canvas = PaymentDonutCanvas;
+        canvas.Children.Clear();
+        var width = ChartWidth(canvas, 210);
+        var payments = _store.Data.Sales.GroupBy(s => s.PaymentMethod)
+            .Select(group => (Method: group.Key, Total: group.Sum(s => s.Total))).OrderByDescending(item => item.Total).ToList();
+        var total = payments.Sum(item => item.Total);
+        PaymentEmptyText.Visibility = total <= 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (total <= 0) return;
+        var center = new Point(Math.Min(width * .42, 78), 78);
+        var brushes = new[] { ChartBrush(ChartAccent), ChartBrush(ChartAccentDark), ChartBrush(ChartAccent, 130) };
+        var start = -90d;
+        for (var index = 0; index < payments.Count; index++)
+        {
+            var sweep = (double)(payments[index].Total / total) * 359.8;
+            canvas.Children.Add(new System.Windows.Shapes.Path { Data = DonutSegment(center, 52, 35, start, sweep), Fill = brushes[index % brushes.Length], Stroke = ChartBrush(ChartLine), StrokeThickness = 1 });
+            start += sweep;
+        }
+        AddChartText(canvas, total.ToString("C0"), center.X - 28, center.Y - 9, 12, ChartInk, true);
+        foreach (var (payment, index) in payments.Take(4).Select((value, index) => (value, index)))
+        {
+            var y = 28 + index * 29;
+            canvas.Children.Add(new Rectangle { Width = 7, Height = 7, RadiusX = 2, RadiusY = 2, Fill = brushes[index % brushes.Length], Margin = new Thickness(Math.Min(width * .68, 132), y + 3, 0, 0) });
+            AddChartText(canvas, payment.Method, Math.Min(width * .68, 132) + 13, y, 10, ChartInk);
+            AddChartText(canvas, $"{payment.Total / total:P0}", Math.Min(width * .68, 132) + 13, y + 13, 9);
+        }
+    }
+
+    private void DrawStockHealth()
+    {
+        var canvas = StockHealthCanvas;
+        canvas.Children.Clear();
+        var width = ChartWidth(canvas, 280);
+        var products = _store.Data.Products.ToList();
+        StockEmptyText.Visibility = products.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (products.Count == 0) return;
+        var healthy = products.Count(product => !IsLowStock(product));
+        var attention = products.Count - healthy;
+        var barWidth = width - 24;
+        AddChartText(canvas, $"{healthy}/{products.Count} catalogued products healthy", 12, 18, 12, ChartInk, true);
+        AddChartText(canvas, attention == 0 ? "No reorder signals" : $"{attention} reorder signal{(attention == 1 ? "" : "s")}", 12, 42, 10, attention == 0 ? ChartAccent : ChartAccentDark);
+        canvas.Children.Add(new Rectangle { Width = barWidth, Height = 18, RadiusX = 9, RadiusY = 9, Fill = ChartBrush(ChartLine), Margin = new Thickness(12, 72, 0, 0) });
+        canvas.Children.Add(new Rectangle { Width = barWidth * healthy / products.Count, Height = 18, RadiusX = 9, RadiusY = 9, Fill = ChartBrush(ChartAccent), Margin = new Thickness(12, 72, 0, 0) });
+        AddChartText(canvas, "HEALTHY", 12, 105, 9, ChartMuted, true);
+        AddChartText(canvas, "ATTENTION", width - 76, 105, 9, ChartMuted, true);
+        AddChartText(canvas, $"{healthy * 100 / products.Count}%", 12, 122, 16, ChartAccent, true);
+        AddChartText(canvas, $"{attention * 100 / products.Count}%", width - 55, 122, 16, ChartAccentDark, true);
+    }
+
+    private void DrawTransactionHours()
+    {
+        var canvas = TransactionHourCanvas;
+        canvas.Children.Clear();
+        var width = ChartWidth(canvas, 230);
+        var buckets = Enumerable.Range(0, 6).Select(index =>
+        {
+            var from = index * 4;
+            return (Label: $"{from:00}", Count: _store.Data.Sales.Count(s => s.CreatedAt.Hour >= from && s.CreatedAt.Hour < from + 4));
+        }).ToList();
+        var max = buckets.Max(item => item.Count);
+        TransactionHourEmptyText.Visibility = max == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (max == 0) return;
+        var barWidth = Math.Max(12, (width - 28) / buckets.Count - 7);
+        for (var index = 0; index < buckets.Count; index++)
+        {
+            var barHeight = 94d * buckets[index].Count / max;
+            var x = 14 + index * (barWidth + 7);
+            canvas.Children.Add(new Rectangle { Width = barWidth, Height = barHeight, RadiusX = 3, RadiusY = 3, Fill = ChartBrush(index == buckets.Count - 1 ? ChartAccent : ChartAccentDark, 190), Margin = new Thickness(x, 110 - barHeight, 0, 0), ToolTip = $"{buckets[index].Label}:00 · {buckets[index].Count} transactions" });
+            AddChartText(canvas, buckets[index].Label, x - 2, 118, 9);
+        }
+        AddChartText(canvas, $"{_store.Data.Sales.Count} transactions", 12, 13, 11, ChartInk, true);
+    }
+
+    private static PathGeometry DonutSegment(Point center, double outerRadius, double innerRadius, double startAngle, double sweepAngle)
+    {
+        static Point PointAt(Point origin, double radius, double angle)
+        {
+            var radians = angle * Math.PI / 180;
+            return new Point(origin.X + radius * Math.Cos(radians), origin.Y + radius * Math.Sin(radians));
+        }
+        var outerStart = PointAt(center, outerRadius, startAngle);
+        var outerEnd = PointAt(center, outerRadius, startAngle + sweepAngle);
+        var innerStart = PointAt(center, innerRadius, startAngle + sweepAngle);
+        var innerEnd = PointAt(center, innerRadius, startAngle);
+        var geometry = new PathGeometry();
+        var figure = new PathFigure { StartPoint = outerStart, IsClosed = true };
+        figure.Segments.Add(new ArcSegment(outerEnd, new Size(outerRadius, outerRadius), 0, sweepAngle > 180, SweepDirection.Clockwise, true));
+        figure.Segments.Add(new LineSegment(innerStart, true));
+        figure.Segments.Add(new ArcSegment(innerEnd, new Size(innerRadius, innerRadius), 0, sweepAngle > 180, SweepDirection.Counterclockwise, true));
+        geometry.Figures.Add(figure);
+        return geometry;
     }
 
     private void ProductSearchBox_TextChanged(object sender, TextChangedEventArgs e)
