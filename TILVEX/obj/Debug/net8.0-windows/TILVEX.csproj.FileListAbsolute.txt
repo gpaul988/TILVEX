@@ -19,3 +19,4 @@ C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\ref\TILVEX.dll
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\AuthWindow.baml
 C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\AuthWindow.g.cs
+C:\Users\graha\RiderProjects\GreyGas_POS\TILVEX\obj\Debug\net8.0-windows\TILVEX.sourcelink.json

@@ -19,13 +19,13 @@ export default async function DashboardPage() {
   const role = session?.role ?? "MANAGER";
   return (
     <div className="space-y-8 pb-16 lg:pb-4">
-      <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <section className="hud-grid glass-panel relative rounded-2xl p-5 sm:p-7">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.2em] text-accent">Command centre</p>
+          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-accent"><span className="h-px w-8 bg-accent" />Command centre</p>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Your operation, at a glance.</h1>
           <p className="mt-2 max-w-xl text-sm text-slate-400">A calm view of what needs your attention today. You are signed in as <span className="text-slate-200">{role.replace("_", " ")}</span>.</p>
         </div>
-        <Link href="/onboarding" className="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-ink transition hover:bg-accent/90">Configure workspace <span>↗</span></Link>
+        <Link href="/onboarding" className="mt-5 inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-ink shadow-halo transition hover:bg-accent/90 sm:absolute sm:right-7 sm:top-7 sm:mt-0">Configure workspace <span>↗</span></Link>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -33,16 +33,16 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
-        <div className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
+        <div className="glass-panel hud-grid rounded-2xl p-5 sm:p-6">
           <div className="flex items-start justify-between">
             <div><h2 className="font-semibold text-white">Sales pulse</h2><p className="mt-1 text-xs text-slate-500">Last 7 days · all locations</p></div>
-            <span className="rounded-md border border-line px-2 py-1 text-xs text-slate-400">This week⌄</span>
+            <span className="rounded-md border border-accent/20 bg-accent/5 px-2 py-1 text-xs text-slate-400">This week⌄</span>
           </div>
           <div className="mt-8 flex h-48 items-end gap-2 sm:gap-4">
             {[42, 57, 48, 74, 61, 84, 68].map((height, index) => <div key={index} className="flex h-full flex-1 flex-col justify-end gap-2"><div className={`rounded-t-md ${index === 5 ? "bg-accent" : "bg-accent/25"}`} style={{ height: `${height}%` }} /><span className="text-center text-[10px] text-slate-500">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][index]}</span></div>)}
           </div>
         </div>
-        <div className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
+        <div className="glass-panel rounded-2xl p-5 sm:p-6">
           <div className="flex items-start justify-between"><div><h2 className="font-semibold text-white">Recent activity</h2><p className="mt-1 text-xs text-slate-500">Today, 21 September</p></div><span className="text-xs text-mint">Live</span></div>
           <div className="mt-5 divide-y divide-line">
             {activity.map(([time, title, category]) => <div className="flex gap-3 py-4 first:pt-0 last:pb-0" key={title}><span className="pt-0.5 text-[11px] text-slate-500">{time}</span><div><p className="text-sm text-slate-200">{title}</p><p className="mt-1 text-xs text-slate-500">{category}</p></div></div>)}
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="flex flex-col justify-between gap-4 rounded-2xl border border-accent/25 bg-accent/5 p-5 sm:flex-row sm:items-center sm:p-6">
+      <section className="glass-panel flex flex-col justify-between gap-4 rounded-2xl border-accent/25 bg-accent/5 p-5 sm:flex-row sm:items-center sm:p-6">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-accent">TILVEX Desktop</p>
           <h2 className="mt-2 font-semibold text-white">Run your POS locally</h2>
@@ -65,5 +65,5 @@ export default async function DashboardPage() {
 }
 
 function StatCard({ label, value, change, detail, tone }: { label: string; value: string; change: string; detail: string; tone: string }) {
-  return <div className="rounded-2xl border border-line bg-panel p-5"><p className="text-xs font-medium text-slate-500">{label}</p><p className="mt-3 text-2xl font-semibold tracking-tight text-white">{value}</p><p className={`mt-2 text-xs font-semibold ${tone}`}>{change}</p><p className="mt-1 text-xs text-slate-500">{detail}</p></div>;
+  return <div className="glass-panel hud-grid rounded-2xl p-5 transition hover:border-accent/40 hover:shadow-halo"><div className="flex items-center justify-between"><p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p><span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(0,212,170,.75)]" /></div><p className="mt-3 text-2xl font-semibold tracking-tight text-white">{value}</p><p className={`mt-2 text-xs font-semibold ${tone}`}>{change}</p><p className="mt-1 text-xs text-slate-500">{detail}</p></div>;
 }

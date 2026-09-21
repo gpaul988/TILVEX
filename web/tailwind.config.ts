@@ -12,10 +12,12 @@ const config: Config = {
         line: "#26303d",
         accent: "#00d4aa",
         "accent-dark": "#007a5e",
-        mint: "#00a882"
+        mint: "#00a882",
+        "brand-text": "#e8edf3"
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(0,212,170,.16), 0 20px 70px rgba(0,0,0,.28)"
+        glow: "0 0 0 1px rgba(0,212,170,.16), 0 20px 70px rgba(0,0,0,.28)",
+        halo: "0 0 0 1px rgba(0,212,170,.22), 0 0 28px rgba(0,212,170,.12)"
       }
     }
   },
