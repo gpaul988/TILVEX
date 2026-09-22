@@ -661,7 +661,11 @@ public partial class MainWindow : Window
 
     private void AddUser_Click(object sender, RoutedEventArgs e)
     {
-        if (!RequireAdmin()) return;
+        if (AppSession.CurrentUser?.Role is not "SuperAdmin")
+        {
+            MessageBox.Show("Only a Super Admin can create users.", "Super Admin permission required");
+            return;
+        }
         if (string.IsNullOrWhiteSpace(UserNameBox.Text)) { MessageBox.Show("Enter a user name."); return; }
         _store.Data.Users.Add(new UserAccount { UserName = UserNameBox.Text.Trim(), Role = (RoleCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cashier" });
         UserNameBox.Clear(); _store.Save(); Refresh();
@@ -699,7 +703,8 @@ public partial class MainWindow : Window
         var currentUser = Environment.UserName;
         var isAdmin = _store.Data.Users.Any(u => u.Active &&
             u.UserName.Equals(currentUser, StringComparison.OrdinalIgnoreCase) &&
-            u.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+            (u.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+             u.Role.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase)));
         if (!isAdmin)
             MessageBox.Show("Only an active Admin can change business, integration, tax, user or workflow settings.", "Admin permission required");
         return isAdmin;

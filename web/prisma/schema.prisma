@@ -43,6 +43,11 @@ model Business {
   users        User[]
   locations    Location[]
   syncEvents   SyncEvent[]
+  products     Product[]
+  suppliers    Supplier[]
+  purchases    PurchaseOrder[]
+  sales        Sale[]
+  invoices     Invoice[]
 }
 
 model User {
@@ -66,6 +71,112 @@ model Location {
   businessId  String
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  sku           String
+  barcode       String?
+  name          String
+  category      String   @default("")
+  unit          String   @default("each")
+  price         Decimal  @default(0)
+  costPrice     Decimal  @default(0)
+  stockQuantity Decimal  @default(0)
+  reorderLevel  Decimal  @default(0)
+  active        Boolean  @default(true)
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  saleLines     SaleLine[]
+  purchaseLines PurchaseLine[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@unique([businessId, sku])
+  @@index([businessId, active])
+}
+
+model Supplier {
+  id         String   @id @default(cuid())
+  name       String
+  contact    String?
+  email      String?
+  phone      String?
+  address    String?
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  purchases  PurchaseOrder[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@index([businessId])
+}
+
+model PurchaseOrder {
+  id         String          @id @default(cuid())
+  number     String
+  status     String          @default("DRAFT")
+  total      Decimal         @default(0)
+  supplierId String
+  supplier   Supplier        @relation(fields: [supplierId], references: [id])
+  businessId String
+  business   Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  lines      PurchaseLine[]
+  createdAt  DateTime        @default(now())
+  receivedAt DateTime?
+  @@unique([businessId, number])
+}
+
+model PurchaseLine {
+  id        String        @id @default(cuid())
+  quantity  Decimal
+  unitCost  Decimal
+  productId String
+  product   Product       @relation(fields: [productId], references: [id])
+  orderId   String
+  order     PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Sale {
+  id            String     @id @default(cuid())
+  receiptNumber String
+  subtotal      Decimal
+  tax           Decimal    @default(0)
+  discount      Decimal    @default(0)
+  total         Decimal
+  paymentMethod String
+  customerName  String?
+  businessId    String
+  business      Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  lines         SaleLine[]
+  invoice       Invoice?
+  createdAt     DateTime   @default(now())
+  @@unique([businessId, receiptNumber])
+  @@index([businessId, createdAt])
+}
+
+model SaleLine {
+  id        String  @id @default(cuid())
+  name      String
+  quantity  Decimal
+  unitPrice Decimal
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  number        String
+  status        String   @default("PAID")
+  amount        Decimal
+  paidAmount    Decimal
+  dueDate       DateTime?
+  saleId        String   @unique
+  sale          Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  @@unique([businessId, number])
 }
 
 model SyncEvent {

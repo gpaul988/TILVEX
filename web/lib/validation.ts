@@ -51,3 +51,28 @@ export const syncEventSchema = z.object({
   createdAt: z.string().datetime(),
   attempts: z.number().int().nonnegative()
 });
+
+export const productSchema = z.object({
+  sku: z.string().trim().min(1).max(80),
+  barcode: z.string().trim().max(80).optional(),
+  name: z.string().trim().min(1).max(160),
+  category: z.string().trim().max(100).default(""),
+  unit: z.string().trim().min(1).max(30).default("each"),
+  price: z.number().nonnegative(),
+  costPrice: z.number().nonnegative().default(0),
+  stockQuantity: z.number().nonnegative().default(0),
+  reorderLevel: z.number().nonnegative().default(0)
+});
+
+export const saleSchema = z.object({
+  receiptNumber: z.string().trim().min(1).max(80),
+  paymentMethod: z.string().trim().min(1).max(40),
+  customerName: z.string().trim().max(160).optional(),
+  tax: z.number().nonnegative().default(0),
+  discount: z.number().nonnegative().default(0),
+  lines: z.array(z.object({
+    productId: z.string().min(1),
+    quantity: z.number().positive(),
+    unitPrice: z.number().nonnegative()
+  })).min(1)
+});

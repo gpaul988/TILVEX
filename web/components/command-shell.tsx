@@ -10,6 +10,7 @@ const navigation: { href: string; label: string; icon: string; roles: Role[] }[]
   { href: "/dashboard", label: "Overview", icon: "⌂", roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "CASHIER", "VIEWER"] },
   { href: "/dashboard/sales", label: "Sales", icon: "↗", roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "CASHIER"] },
   { href: "/dashboard/inventory", label: "Inventory", icon: "▦", roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"] },
+  { href: "/dashboard/suppliers", label: "Purchasing", icon: "⇄", roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"] },
   { href: "/dashboard/team", label: "Team", icon: "◎", roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"] },
   { href: "/dashboard/settings", label: "Settings", icon: "⚙", roles: ["SUPER_ADMIN", "ADMIN"] }
 ] as const;

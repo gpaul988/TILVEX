@@ -104,7 +104,7 @@ public sealed class PosStore
             UserName = normalizedName,
             Email = normalizedEmail,
             PasswordHash = ComputePasswordHash(password),
-            Role = "Admin",
+            Role = "SuperAdmin",
             Active = true
         };
 
@@ -147,7 +147,7 @@ public sealed class PosStore
                 UserName = "TILVEX Admin",
                 Email = adminEmail,
                 PasswordHash = ComputePasswordHash("Tilvex123!"),
-                Role = "Admin"
+                Role = "SuperAdmin"
             });
         }
 
@@ -176,7 +176,7 @@ public sealed class PosStore
                 UserName = "TILVEX Admin",
                 Email = adminEmail,
                 PasswordHash = ComputePasswordHash("Tilvex123!"),
-                Role = "Admin",
+                Role = "SuperAdmin",
                 Active = true
             });
         }
