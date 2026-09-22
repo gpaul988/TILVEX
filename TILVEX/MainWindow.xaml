@@ -17,6 +17,11 @@
         <SolidColorBrush x:Key="SuccessBrush" Color="#007A5E"/>
         <SolidColorBrush x:Key="WarningBrush" Color="#00D4AA"/>
         <SolidColorBrush x:Key="DangerBrush" Color="#00D4AA"/>
+        <LinearGradientBrush x:Key="FuturisticSurface" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#1A202A" Offset="0"/>
+            <GradientStop Color="#141720" Offset="0.52"/>
+            <GradientStop Color="#0D0F14" Offset="1"/>
+        </LinearGradientBrush>
         <DropShadowEffect x:Key="CardShadow" BlurRadius="24" ShadowDepth="0" Direction="270" Opacity="0.38" Color="#00D4AA"/>
         <Style TargetType="{x:Type ScrollBar}">
             <Setter Property="Width" Value="10"/>
@@ -71,7 +76,7 @@
             <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
         <Style x:Key="AppButton" TargetType="{x:Type Button}">
-            <Setter Property="Background" Value="{StaticResource NavyLightBrush}"/>
+            <Setter Property="Background" Value="{StaticResource FuturisticSurface}"/>
             <Setter Property="Foreground" Value="#E8EDF3"/>
             <Setter Property="BorderBrush" Value="{StaticResource NavyLightBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -159,7 +164,7 @@
         </Style>
 
         <Style TargetType="{x:Type GroupBox}">
-            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Background" Value="{StaticResource FuturisticSurface}"/>
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="0"/>

@@ -19,16 +19,16 @@ export default async function DashboardPage() {
   const role = session?.role ?? "MANAGER";
   return (
     <div className="space-y-8 pb-16 lg:pb-4">
-      <section className="hud-grid glass-panel relative rounded-2xl p-5 sm:p-7">
+      <section className="hud-grid futuristic-frame glass-panel scanline relative rounded-2xl p-5 sm:p-7 rise-in">
         <div>
-          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-accent"><span className="h-px w-8 bg-accent" />Command centre</p>
+          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-accent"><span className="pulse-dot h-2 w-2 rounded-full bg-accent shadow-halo" />Command centre // live telemetry</p>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Your operation, at a glance.</h1>
           <p className="mt-2 max-w-xl text-sm text-slate-400">A calm view of what needs your attention today. You are signed in as <span className="text-slate-200">{role.replace("_", " ")}</span>.</p>
         </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => <StatCard key={stat.label} {...stat} />)}
+        {stats.map((stat, index) => <StatCard key={stat.label} {...stat} delay={index} />)}
       </section>
 
       <section>
@@ -81,6 +81,6 @@ export default async function DashboardPage() {
   );
 }
 
-function StatCard({ label, value, change, detail, tone }: { label: string; value: string; change: string; detail: string; tone: string }) {
-  return <div className="glass-panel hud-grid rounded-2xl p-5 transition hover:border-accent/40 hover:shadow-halo"><div className="flex items-center justify-between"><p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p><span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(0,212,170,.75)]" /></div><p className="mt-3 text-2xl font-semibold tracking-tight text-white">{value}</p><p className={`mt-2 text-xs font-semibold ${tone}`}>{change}</p><p className="mt-1 text-xs text-slate-500">{detail}</p></div>;
+function StatCard({ label, value, change, detail, tone, delay }: { label: string; value: string; change: string; detail: string; tone: string; delay: number }) {
+  return <div className="glass-panel hud-grid futuristic-frame rounded-2xl p-5 transition hover:border-accent/40 hover:shadow-halo rise-in" style={{ animationDelay: `${delay * 80}ms` }}><div className="flex items-center justify-between"><p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p><span className="pulse-dot h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(0,212,170,.75)]" /></div><p className="mt-3 text-2xl font-semibold tracking-tight text-white">{value}</p><p className={`mt-2 text-xs font-semibold ${tone}`}>{change}</p><p className="mt-1 text-xs text-slate-500">{detail}</p></div>;
 }
