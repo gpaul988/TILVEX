@@ -370,13 +370,13 @@ public partial class MainWindow : Window
             PaymentMethod = paymentMethod,
             Tendered = tendered
         };
+        sale.Lines.AddRange(_cart.Select(line => new SaleLine { ProductId = line.ProductId, Sku = line.Sku, Name = line.Name, UnitPrice = line.UnitPrice, Quantity = line.Quantity, Unit = line.Unit, UnitLabel = line.UnitLabel }));
         sale.Payments = ParsePayments(paymentMethod, TenderedBox.Text, sale.Total);
         if (sale.Payments.Count == 0 || Math.Abs(sale.Payments.Sum(p => p.Amount) - sale.Total) > 0.005m)
         {
             MessageBox.Show($"Payment allocations must equal the sale total ({sale.Total:C}). For split payment enter: Cash:10, Gift card:5 in Tendered.");
             return;
         }
-        sale.Lines.AddRange(_cart.Select(line => new SaleLine { ProductId = line.ProductId, Sku = line.Sku, Name = line.Name, UnitPrice = line.UnitPrice, Quantity = line.Quantity, Unit = line.Unit, UnitLabel = line.UnitLabel }));
         if (sale.PaymentMethod == "Cash" && tendered < sale.Total) { MessageBox.Show($"Cash tendered is less than the total ({sale.Total:C})."); return; }
         foreach (var line in _cart) _store.Data.Products.First(p => p.Id == line.ProductId).StockQuantity -= line.Quantity;
         _store.Data.Sales.Add(sale);
