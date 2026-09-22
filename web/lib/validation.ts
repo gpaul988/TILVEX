@@ -30,17 +30,26 @@ export const onboardingSchema = z.object({
   businessType: businessTypeSchema,
   ownerName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().toLowerCase(),
-  password: z.string().min(12).max(128)
+  password: z.string().min(12).max(128),
+  locations: z.array(z.object({
+    name: z.string().trim().min(2).max(100),
+    address: z.string().trim().max(240).optional()
+  })).min(1).max(100)
 });
 
 export const profileSyncSchema = onboardingSchema.extend({
+  locations: onboardingSchema.shape.locations.default([{ name: "Main location" }]),
   password: z.string().min(8).max(128),
   mode: z.enum(["REGISTER", "LOGIN"])
 });
 
 export const workspaceSchema = z.object({
   businessName: z.string().trim().min(2, "Business name must be at least 2 characters.").max(100),
-  businessType: businessTypeSchema
+  businessType: businessTypeSchema,
+  locations: z.array(z.object({
+    name: z.string().trim().min(2).max(100),
+    address: z.string().trim().max(240).optional()
+  })).min(1).max(100)
 });
 
 export const syncEventSchema = z.object({
@@ -66,7 +75,6 @@ export const productSchema = z.object({
 
 export const saleSchema = z.object({
   receiptNumber: z.string().trim().min(1).max(80),
-  paymentMethod: z.string().trim().min(1).max(40),
   customerName: z.string().trim().max(160).optional(),
   tax: z.number().nonnegative().default(0),
   discount: z.number().nonnegative().default(0),
@@ -74,5 +82,10 @@ export const saleSchema = z.object({
     productId: z.string().min(1),
     quantity: z.number().positive(),
     unitPrice: z.number().nonnegative()
+  })).min(1),
+  payments: z.array(z.object({
+    method: z.enum(["LOYALTY_POINTS", "GIFT_CARD", "ON_ACCOUNT", "STORE_CREDIT", "BANK_TRANSFER", "CASH"]),
+    amount: z.number().positive(),
+    reference: z.string().trim().max(120).optional()
   })).min(1)
 });

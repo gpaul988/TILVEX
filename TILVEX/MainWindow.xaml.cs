@@ -358,6 +358,7 @@ public partial class MainWindow : Window
             var product = _store.Data.Products.First(p => p.Id == line.ProductId);
             if (line.Quantity > product.StockQuantity) { MessageBox.Show($"Not enough stock for {product.Name}."); return; }
         }
+        var paymentMethod = (PaymentCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cash";
         var tendered = decimal.TryParse(TenderedBox.Text, out var amount) ? amount : 0;
         var sale = new Sale
         {
@@ -366,9 +367,15 @@ public partial class MainWindow : Window
             Discount = CalculateDiscount(),
             TaxRate = _store.Data.Tax.Rate,
             TaxInclusive = _store.Data.Tax.Inclusive,
-            PaymentMethod = (PaymentCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cash",
+            PaymentMethod = paymentMethod,
             Tendered = tendered
         };
+        sale.Payments = ParsePayments(paymentMethod, TenderedBox.Text, sale.Total);
+        if (sale.Payments.Count == 0 || Math.Abs(sale.Payments.Sum(p => p.Amount) - sale.Total) > 0.005m)
+        {
+            MessageBox.Show($"Payment allocations must equal the sale total ({sale.Total:C}). For split payment enter: Cash:10, Gift card:5 in Tendered.");
+            return;
+        }
         sale.Lines.AddRange(_cart.Select(line => new SaleLine { ProductId = line.ProductId, Sku = line.Sku, Name = line.Name, UnitPrice = line.UnitPrice, Quantity = line.Quantity, Unit = line.Unit, UnitLabel = line.UnitLabel }));
         if (sale.PaymentMethod == "Cash" && tendered < sale.Total) { MessageBox.Show($"Cash tendered is less than the total ({sale.Total:C})."); return; }
         foreach (var line in _cart) _store.Data.Products.First(p => p.Id == line.ProductId).StockQuantity -= line.Quantity;
@@ -394,6 +401,32 @@ public partial class MainWindow : Window
         var subtotal = _cart.Sum(l => l.LineTotal);
         return _selectedPromotion is null ? 0 : Math.Round(subtotal * _selectedPromotion.DiscountPercent / 100m, 2);
     }
+
+    private static List<PaymentAllocation> ParsePayments(string method, string input, decimal total)
+    {
+        if (method == "Split payment")
+        {
+            return input.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(part => part.Split(':', 2, StringSplitOptions.TrimEntries))
+                .Where(parts => parts.Length == 2 && decimal.TryParse(parts[1], out _))
+                .Select(parts => new PaymentAllocation { Method = NormalizePaymentMethod(parts[0]), Amount = decimal.Parse(parts[1]) })
+                .Where(payment => payment.Amount > 0)
+                .ToList();
+        }
+        return decimal.TryParse(input, out var amount) && amount > 0
+            ? [new PaymentAllocation { Method = NormalizePaymentMethod(method), Amount = Math.Min(amount, total) }]
+            : [];
+    }
+
+    private static string NormalizePaymentMethod(string method) => method.Trim().ToLowerInvariant() switch
+    {
+        "loyalty points" => "Loyalty points",
+        "gift card" => "Gift card",
+        "on account" => "On account",
+        "store credit" => "Store credit",
+        "bank transfer" => "Bank transfer",
+        _ => "Cash"
+    };
 
     private void PromotionCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

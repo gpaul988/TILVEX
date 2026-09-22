@@ -22,9 +22,19 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    const business = await db.business.update({
-      where: { id: session.businessId },
-      data: { name: parsed.data.businessName, type: parsed.data.businessType }
+    const business = await db.$transaction(async (tx) => {
+      const updated = await tx.business.update({
+        where: { id: session.businessId! },
+        data: { name: parsed.data.businessName, type: parsed.data.businessType }
+      });
+      for (const location of parsed.data.locations) {
+        await tx.location.upsert({
+          where: { id: `${session.businessId}-${location.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}` },
+          update: { name: location.name, address: location.address },
+          create: { id: `${session.businessId}-${location.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: location.name, address: location.address, businessId: session.businessId! }
+        });
+      }
+      return updated;
     });
     return NextResponse.json({ ok: true, businessId: business.id, updated: true });
   }
@@ -47,6 +57,14 @@ export async function POST(request: Request) {
         workspaceKey: "PRIMARY",
         name: parsed.data.businessName,
         type: parsed.data.businessType,
+        locations: { create: parsed.data.locations },
+        programs: { create: [
+          { name: "Service charge", kind: "SERVICE_CHARGE" },
+          { name: "Surcharge", kind: "SURCHARGE" },
+          { name: "Cash discount", kind: "CASH_DISCOUNT" },
+          { name: "Dual pricing", kind: "DUAL_PRICING" },
+          { name: "Tips", kind: "TIPS" }
+        ] },
         users: {
           create: {
             name: parsed.data.ownerName,

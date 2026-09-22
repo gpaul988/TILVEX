@@ -48,6 +48,12 @@ model Business {
   purchases    PurchaseOrder[]
   sales        Sale[]
   invoices     Invoice[]
+  programs     Program[]
+  taxRules     TaxRule[]
+  customers    Customer[]
+  orders       Order[]
+  tables       RestaurantTable[]
+  exchanges    Exchange[]
 }
 
 model User {
@@ -71,6 +77,104 @@ model Location {
   businessId  String
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
+  products    LocationStock[]
+  orders      Order[]
+  tables      RestaurantTable[]
+}
+
+model LocationStock {
+  id         String   @id @default(cuid())
+  quantity   Decimal  @default(0)
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([locationId, productId])
+}
+
+model Program {
+  id         String   @id @default(cuid())
+  name       String
+  kind       String
+  enabled    Boolean  @default(true)
+  rate       Decimal  @default(0)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@unique([businessId, kind])
+}
+
+model TaxRule {
+  id         String   @id @default(cuid())
+  name       String
+  rate       Decimal
+  inclusive  Boolean  @default(false)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@index([businessId])
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String?
+  email      String?
+  points     Decimal  @default(0)
+  credit     Decimal  @default(0)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  orders     Order[]
+  @@index([businessId, name])
+}
+
+model Ingredient {
+  id        String  @id @default(cuid())
+  quantity  Decimal @default(0)
+  unit      String
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([productId, unit])
+}
+
+model Order {
+  id           String   @id @default(cuid())
+  number       String
+  status       String   @default("RECEIVED")
+  channel      String   @default("POS")
+  notes        String?
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  locationId   String
+  location     Location @relation(fields: [locationId], references: [id])
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@unique([businessId, number])
+  @@index([businessId, status])
+}
+
+model RestaurantTable {
+  id         String   @id @default(cuid())
+  name       String
+  seats      Int      @default(2)
+  status     String   @default("AVAILABLE")
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@unique([locationId, name])
+}
+
+model Exchange {
+  id            String   @id @default(cuid())
+  originalRef   String
+  replacementRef String?
+  reason        String
+  amountDelta   Decimal  @default(0)
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  @@index([businessId, createdAt])
 }
 
 model Product {
@@ -89,6 +193,8 @@ model Product {
   business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   saleLines     SaleLine[]
   purchaseLines PurchaseLine[]
+  locationStock LocationStock[]
+  ingredients   Ingredient[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   @@unique([businessId, sku])
@@ -147,10 +253,22 @@ model Sale {
   businessId    String
   business      Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   lines         SaleLine[]
+  payments      PaymentAllocation[]
   invoice       Invoice?
   createdAt     DateTime   @default(now())
   @@unique([businessId, receiptNumber])
   @@index([businessId, createdAt])
+}
+
+model PaymentAllocation {
+  id            String   @id @default(cuid())
+  method        String
+  amount        Decimal
+  reference     String?
+  saleId        String
+  sale          Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  @@index([saleId, method])
 }
 
 model SaleLine {

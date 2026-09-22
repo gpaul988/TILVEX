@@ -41,6 +41,13 @@ public enum IntegrationConnectionStatus
     Error
 }
 
+public sealed class PaymentAllocation
+{
+    public string Method { get; set; } = "Cash";
+    public decimal Amount { get; set; }
+    public string Reference { get; set; } = "";
+}
+
 public sealed class Product
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -67,6 +74,7 @@ public sealed class Sale
     public bool TaxInclusive { get; set; }
     public string PaymentMethod { get; set; } = "Cash";
     public decimal Tendered { get; set; }
+    public List<PaymentAllocation> Payments { get; set; } = [];
     [JsonIgnore]     public decimal ItemCount => Lines.Sum(line => line.Quantity);
     [JsonIgnore] public decimal Subtotal => Lines.Sum(line => line.LineTotal);
     [JsonIgnore] public decimal Tax => TaxInclusive
