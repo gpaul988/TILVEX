@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TILVEX")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e9595fb7e230a5ecbadc21ad4f00f8a42b46e66f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8813313ecdac7f44fe74d512555839e567b273dc")]
 [assembly: System.Reflection.AssemblyProductAttribute("TILVEX")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TILVEX")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

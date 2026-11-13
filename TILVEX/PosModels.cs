@@ -189,11 +189,15 @@ public sealed class UserAccount
 public sealed class BusinessSettings
 {
     public string BusinessName { get; set; } = "TILVEX";
+    public string Email { get; set; } = "";
     public string Address { get; set; } = "";
+    public string City { get; set; } = "";
+    public string Country { get; set; } = "";
     public string Phone { get; set; } = "";
     public string ReceiptFooter { get; set; } = "Thank you for your custom.";
     public string CurrencySymbol { get; set; } = "£";
     public BusinessType BusinessType { get; set; } = BusinessType.Retail;
+    public bool SetupCompleted { get; set; }
     public string CompanyLogoPath { get; set; } = "";
     public string TimeZone { get; set; } = TimeZoneInfo.Local.Id;
     public decimal LowStockAlertThreshold { get; set; } = 5;
@@ -261,7 +265,7 @@ public sealed class WorkflowScreen
 
 public sealed class PosData
 {
-    public int SchemaVersion { get; set; } = 3;
+    public int SchemaVersion { get; set; } = 4;
     public List<Product> Products { get; set; } = [];
     public List<Sale> Sales { get; set; } = [];
     public List<Customer> Customers { get; set; } = [];

@@ -97,6 +97,13 @@ public partial class AuthWindow : Window
 
     private void OpenMainWindow()
     {
+        if (!_store.Data.Settings.SetupCompleted)
+        {
+            var setupWizard = new SetupWizard(_store) { Owner = this };
+            if (setupWizard.ShowDialog() != true)
+                return;
+        }
+
         var mainWindow = new MainWindow();
         mainWindow.Show();
         Close();

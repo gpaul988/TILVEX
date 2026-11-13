@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 
@@ -13,6 +16,8 @@ namespace TILVEX;
 
 public partial class MainWindow : Window
 {
+    private sealed record BusinessTypeOption(BusinessType Type, string DisplayName);
+
     private readonly PosStore _store = new();
     private IPosIntegrationService _integration = null!;
     private readonly ObservableCollection<SaleLine> _cart = [];
@@ -26,10 +31,18 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         OperatorText.Text = $"Good morning, {AppSession.CurrentUser?.UserName ?? "operator"}";
+        MainTabs.SelectedIndex = 1;
+        MainPageTitle.Text = "Point of sale";
         CartGrid.ItemsSource = _cart;
         UnitCombo.ItemsSource = Enum.GetValues<UnitOfMeasure>();
-        BusinessTypeCombo.ItemsSource = Enum.GetValues<BusinessType>();
+        BusinessTypeCombo.ItemsSource = Enum.GetValues<BusinessType>()
+            .Select(type => new BusinessTypeOption(type, BusinessTypeDisplayName(type)))
+            .ToList();
+        BusinessTypeCombo.DisplayMemberPath = nameof(BusinessTypeOption.DisplayName);
+        BusinessTypeCombo.SelectedValuePath = nameof(BusinessTypeOption.Type);
         LoadSettings();
+        ApplyCurrencyCulture();
+        HeaderSubtitle.Text = "Scan items, build a receipt and take payment";
         _integration = new HttpIntegrationService(_store.Data.Settings.Integrations);
         Refresh();
     }
@@ -42,6 +55,7 @@ public partial class MainWindow : Window
             return;
 
         MainTabs.SelectedIndex = tabIndex;
+        MainPageTitle.Text = tabIndex == 1 ? "Point of sale" : "Business command centre";
         HeaderSubtitle.Text = tabIndex switch
         {
             0 => "Sales, stock and daily operations",
@@ -71,7 +85,14 @@ public partial class MainWindow : Window
     private void Refresh()
     {
         var products = _store.Data.Products.OrderBy(p => p.Name).ToList();
-        SaleProductsGrid.ItemsSource = products;
+        ProductCategoryCombo.ItemsSource = new[] { "All categories" }
+            .Concat(products.Select(product => product.Category)
+                .Where(category => !string.IsNullOrWhiteSpace(category))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(category => category, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        ProductCategoryCombo.SelectedIndex = 0;
+        RefreshSaleProducts();
         InventoryGrid.ItemsSource = products;
         SalesHistoryGrid.ItemsSource = _store.Data.Sales.OrderByDescending(s => s.CreatedAt).ToList();
         RecentSalesGrid.ItemsSource = _store.Data.Sales.OrderByDescending(s => s.CreatedAt).Take(10).ToList();
@@ -104,11 +125,11 @@ public partial class MainWindow : Window
         RefreshDashboardCharts();
     }
 
-    private static readonly Color ChartAccent = Color.FromRgb(0x00, 0xD4, 0xAA);
-    private static readonly Color ChartAccentDark = Color.FromRgb(0x00, 0x7A, 0x5E);
-    private static readonly Color ChartInk = Color.FromRgb(0xE8, 0xED, 0xF3);
-    private static readonly Color ChartMuted = Color.FromRgb(0x71, 0x80, 0x96);
-    private static readonly Color ChartLine = Color.FromRgb(0x26, 0x30, 0x3D);
+    private static readonly Color ChartAccent = Color.FromRgb(0x0F, 0x9F, 0x78);
+    private static readonly Color ChartAccentDark = Color.FromRgb(0x0B, 0x80, 0x5E);
+    private static readonly Color ChartInk = Color.FromRgb(0x17, 0x23, 0x34);
+    private static readonly Color ChartMuted = Color.FromRgb(0x6B, 0x77, 0x8A);
+    private static readonly Color ChartLine = Color.FromRgb(0xE3, 0xE9, 0xF0);
 
     private void RefreshDashboardCharts()
     {
@@ -304,13 +325,110 @@ public partial class MainWindow : Window
 
     private void ProductSearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
+        RefreshSaleProducts();
+    }
+
+    private void ProductCategory_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        RefreshSaleProducts();
+
+    private void ShowAllProducts_Click(object sender, RoutedEventArgs e)
+    {
+        ProductSearchBox.Clear();
+        ProductCategoryCombo.SelectedIndex = 0;
+        RefreshSaleProducts();
+    }
+
+    private void RefreshSaleProducts()
+    {
+        if (SaleProductsGrid is null || ProductSearchBox is null || ProductCategoryCombo is null)
+            return;
+
         var search = ProductSearchBox.Text.Trim();
-        SaleProductsGrid.ItemsSource = _store.Data.Products
+        var category = ProductCategoryCombo.SelectedItem as string;
+        var products = _store.Data.Products
+            .Where(product => string.IsNullOrWhiteSpace(category) ||
+                              category.Equals("All categories", StringComparison.OrdinalIgnoreCase) ||
+                              product.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
             .Where(p => string.IsNullOrWhiteSpace(search) ||
                         p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                         p.Sku.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                         p.Barcode.Contains(search, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(p => p.Name).ToList();
+            .OrderBy(product => product.Name)
+            .ToList();
+        SaleProductsGrid.ItemsSource = products;
+        ProductCountLabel.Text = $"{products.Count} product button{(products.Count == 1 ? "" : "s")}";
+    }
+
+    private void RegisterAction_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+            return;
+
+        switch (button.Tag?.ToString())
+        {
+            case "Close":
+                MainTabs.SelectedIndex = 0;
+                MainPageTitle.Text = "Business command centre";
+                HeaderSubtitle.Text = "Sales, stock and daily operations";
+                break;
+            case "New":
+                _cart.Clear();
+                CartGrid.Items.Refresh();
+                PromotionCombo.SelectedItem = null;
+                CustomerCombo.SelectedItem = null;
+                TenderedBox.Text = "0";
+                BarcodeBox.Clear();
+                UpdateCartTotal();
+                BarcodeBox.Focus();
+                break;
+            case "Remove":
+                RemoveCartItem_Click(sender, e);
+                break;
+            case "Scan":
+                BarcodeBox.Focus();
+                break;
+            case "Customer":
+                CustomerCombo.Focus();
+                CustomerCombo.IsDropDownOpen = true;
+                break;
+            case "Return":
+                MainTabs.SelectedIndex = 6;
+                MainPageTitle.Text = "Business command centre";
+                HeaderSubtitle.Text = "Process returns and customer refunds";
+                break;
+            case "Stock":
+                MainTabs.SelectedIndex = 2;
+                MainPageTitle.Text = "Business command centre";
+                HeaderSubtitle.Text = "Manage products, prices and stock levels";
+                break;
+            case "Pay":
+                CompleteSale_Click(sender, e);
+                break;
+        }
+    }
+
+    private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (MainTabs.SelectedIndex != 1)
+            return;
+
+        var action = e.Key switch
+        {
+            Key.F1 => "Close",
+            Key.F2 => "New",
+            Key.F3 => "Remove",
+            Key.F4 => "Scan",
+            Key.F5 => "Customer",
+            Key.F6 => "Return",
+            Key.F7 => "Stock",
+            Key.F8 => "Pay",
+            _ => null
+        };
+        if (action is null)
+            return;
+
+        RegisterAction_Click(new Button { Tag = action }, new RoutedEventArgs());
+        e.Handled = true;
     }
 
     private void BarcodeBox_KeyDown(object sender, KeyEventArgs e)
@@ -390,7 +508,6 @@ public partial class MainWindow : Window
         _cart.Clear();
         CartGrid.Items.Refresh();
         Refresh();
-        _ = NotifySaleAsync(sale);
         _ = NotifyLowStockAsync();
         MessageBox.Show($"Receipt {sale.ReceiptNumber}\n\nTOTAL: {sale.Total:C}\nChange: {sale.Change:C}", "Sale completed");
         PrintSale(sale);
@@ -639,16 +756,20 @@ public partial class MainWindow : Window
     private void LoadSettings()
     {
         var settings = _store.Data.Settings; HeaderSubtitle.Text = $"{settings.BusinessName} • {settings.BusinessType} • Offline-first operations";
-        BusinessNameBox.Text = settings.BusinessName; BusinessAddressBox.Text = settings.Address; BusinessPhoneBox.Text = settings.Phone; ReceiptFooterBox.Text = settings.ReceiptFooter;
-        BusinessTypeCombo.SelectedItem = settings.BusinessType;
+        BusinessNameBox.Text = settings.BusinessName; BusinessEmailBox.Text = settings.Email;
+        BusinessAddressBox.Text = settings.Address; BusinessCityBox.Text = settings.City;
+        BusinessCountryBox.Text = settings.Country; BusinessPhoneBox.Text = settings.Phone;
+        ReceiptFooterBox.Text = settings.ReceiptFooter;
+        BusinessTypeCombo.SelectedValue = settings.BusinessType;
         CompanyLogoBox.Text = settings.CompanyLogoPath;
+        CurrencySymbolCombo.SelectedValue = settings.CurrencySymbol;
         LowStockThresholdBox.Text = settings.LowStockAlertThreshold.ToString("0.##");
         OwnerEmailBox.Text = string.IsNullOrWhiteSpace(settings.LowStockOwnerEmail) ? settings.Reports.OwnerEmail : settings.LowStockOwnerEmail;
         SaleNotificationsBox.IsChecked = settings.Notifications.SaleTimestampNotifications;
         OwnerEmailAlertsBox.IsChecked = settings.Notifications.LowStockOwnerEmailAlerts;
         SyncEnabledBox.IsChecked = settings.Integrations.OnlineSyncEnabled;
         SyncEndpointBox.Text = settings.Integrations.SyncEndpoint;
-        SyncApiKeyBox.Text = settings.Integrations.SyncApiKey;
+        SyncApiKeyBox.Password = settings.Integrations.SyncApiKey;
         GoogleDriveFolderBox.Text = settings.Integrations.GoogleDriveFolderId;
         GoogleSheetsIdBox.Text = settings.Integrations.GoogleSheetsSpreadsheetId;
         GoogleSheetsTabBox.Text = settings.Integrations.GoogleSheetsWorksheet;
@@ -656,6 +777,7 @@ public partial class MainWindow : Window
         SmsWebhookBox.Text = settings.Integrations.SmsWebhookUrl;
         EmailWebhookBox.Text = settings.Integrations.EmailWebhookUrl;
         if (DatabaseStatusText is not null) DatabaseStatusText.Text = $"Local JSON: {_store.DataPath}";
+        if (SettingsStatusText is not null) SettingsStatusText.Text = $"Last saved: {_store.LastSavedAt.ToString("g", CultureInfo.CurrentCulture)}";
         TaxNameBox.Text = _store.Data.Tax.Name; TaxRateBox.Text = _store.Data.Tax.Rate.ToString("0.##"); TaxInclusiveBox.IsChecked = _store.Data.Tax.Inclusive;
         RoleCombo.SelectedIndex = 0;
     }
@@ -664,18 +786,33 @@ public partial class MainWindow : Window
     {
         if (!RequireAdmin()) return;
         var s = _store.Data.Settings;
+        var businessEmail = BusinessEmailBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(BusinessNameBox.Text))
+        { MessageBox.Show("Enter a business name before saving.", "Business name required"); return; }
+        if (businessEmail.Length > 0 && !System.Net.Mail.MailAddress.TryCreate(businessEmail, out _))
+        { MessageBox.Show("Enter a valid business email address, or leave the field blank.", "Invalid email"); return; }
         if (!decimal.TryParse(LowStockThresholdBox.Text, out var threshold) || threshold < 0)
         { MessageBox.Show("Enter a valid low-stock threshold."); return; }
-        s.BusinessName = BusinessNameBox.Text.Trim(); s.Address = BusinessAddressBox.Text.Trim(); s.Phone = BusinessPhoneBox.Text.Trim(); s.ReceiptFooter = ReceiptFooterBox.Text.Trim();
-        s.BusinessType = BusinessTypeCombo.SelectedItem is BusinessType type ? type : BusinessType.Other;
-        s.CompanyLogoPath = CompanyLogoBox.Text.Trim(); s.LowStockAlertThreshold = threshold; s.LowStockOwnerEmail = OwnerEmailBox.Text.Trim();
+        if (CurrencySymbolCombo.SelectedValue is not string currency)
+        { MessageBox.Show("Choose the currency used for sales.", "Currency required"); return; }
+        var logoPath = CompanyLogoBox.Text.Trim();
+        if (logoPath.Length > 0 &&
+            (!File.Exists(logoPath) || !new[] { ".png", ".jpg", ".jpeg", ".bmp" }
+                .Contains(System.IO.Path.GetExtension(logoPath), StringComparer.OrdinalIgnoreCase)))
+        { MessageBox.Show("Choose an existing PNG, JPG or BMP image for the company logo.", "Invalid logo"); return; }
+        s.BusinessName = BusinessNameBox.Text.Trim(); s.Email = businessEmail;
+        s.Address = BusinessAddressBox.Text.Trim(); s.City = BusinessCityBox.Text.Trim();
+        s.Country = BusinessCountryBox.Text.Trim(); s.Phone = BusinessPhoneBox.Text.Trim();
+        s.ReceiptFooter = ReceiptFooterBox.Text.Trim(); s.CurrencySymbol = currency;
+        s.BusinessType = BusinessTypeCombo.SelectedValue is BusinessType type ? type : BusinessType.Other;
+        s.CompanyLogoPath = logoPath; s.LowStockAlertThreshold = threshold; s.LowStockOwnerEmail = OwnerEmailBox.Text.Trim();
         s.Reports.OwnerEmail = s.LowStockOwnerEmail;
         s.EnableSaleNotifications = SaleNotificationsBox.IsChecked == true;
         s.EnableOwnerEmailAlerts = OwnerEmailAlertsBox.IsChecked == true;
         s.Notifications.SaleTimestampNotifications = SaleNotificationsBox.IsChecked == true;
         s.Notifications.LowStockOwnerEmailAlerts = OwnerEmailAlertsBox.IsChecked == true;
         s.Integrations.OnlineSyncEnabled = SyncEnabledBox.IsChecked == true;
-        s.Integrations.SyncEndpoint = SyncEndpointBox.Text.Trim(); s.Integrations.SyncApiKey = SyncApiKeyBox.Text.Trim();
+        s.Integrations.SyncEndpoint = SyncEndpointBox.Text.Trim(); s.Integrations.SyncApiKey = SyncApiKeyBox.Password.Trim();
         s.Integrations.GoogleDriveFolderId = GoogleDriveFolderBox.Text.Trim();
         s.Integrations.GoogleSheetsSpreadsheetId = GoogleSheetsIdBox.Text.Trim();
         s.Integrations.GoogleSheetsWorksheet = GoogleSheetsTabBox.Text.Trim();
@@ -689,7 +826,74 @@ public partial class MainWindow : Window
             ? IntegrationConnectionStatus.Ready : IntegrationConnectionStatus.Offline;
         s.Integrations.LastSyncMessage = s.Integrations.SyncStatus == IntegrationConnectionStatus.Ready
             ? "Configured; sync is opt-in and sales remain local until a sync is requested." : "Local-only mode; no online integration configured.";
-        _store.Save(); LoadSettings(); MessageBox.Show("Business settings saved.");
+        _store.Save();
+        ApplyCurrencyCulture();
+        LoadSettings();
+        Refresh();
+        MessageBox.Show("Workspace settings saved.", "Settings saved", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void ApplyCurrencyCulture()
+    {
+        var symbol = _store.Data.Settings.CurrencySymbol;
+        var cultureName = symbol switch
+        {
+            "₦" => "en-NG",
+            "£" => "en-GB",
+            "$" => "en-US",
+            "€" => "fr-FR",
+            "GH₵" => "en-GH",
+            "KSh" => "sw-KE",
+            "R" => "en-ZA",
+            "C$" => "en-CA",
+            _ => CultureInfo.CurrentCulture.Name
+        };
+        var culture = (CultureInfo)CultureInfo.GetCultureInfo(cultureName).Clone();
+        culture.NumberFormat.CurrencySymbol = symbol;
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        Language = XmlLanguage.GetLanguage(culture.Name);
+    }
+
+    private static string BusinessTypeDisplayName(BusinessType type) => type switch
+    {
+        BusinessType.Retail => "General retail",
+        BusinessType.BeautySalon => "Beauty & salon",
+        BusinessType.Boutique => "Fashion & apparel",
+        BusinessType.Electrical => "Electrical",
+        BusinessType.ComputerRepair => "Computer services",
+        BusinessType.Electronics => "Electronics",
+        BusinessType.Pharmacy => "Pharmacy",
+        BusinessType.GasPetrolStation => "Fuel & gas",
+        BusinessType.Grocery => "Grocery",
+        BusinessType.Hospitality => "Cafe & hospitality",
+        BusinessType.Service => "Services",
+        BusinessType.Fuel => "Fuel services",
+        _ => "Other business"
+    };
+
+    private void CancelSettings_Click(object sender, RoutedEventArgs e)
+    {
+        LoadSettings();
+        SettingsStatusText.Text = "Settings reloaded from local data";
+    }
+
+    private void BrowseCompanyLogo_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Image files|*.png;*.jpg;*.jpeg;*.bmp|All files|*.*",
+            Title = "Choose a company logo"
+        };
+        if (dialog.ShowDialog(this) == true)
+            CompanyLogoBox.Text = dialog.FileName;
+    }
+
+    private void OpenTaxSettings_Click(object sender, RoutedEventArgs e)
+    {
+        MainTabs.SelectedIndex = 7;
+        MainPageTitle.Text = "Promotions & VAT";
+        HeaderSubtitle.Text = "Manage tax rates and discount promotions";
     }
 
     private void AddUser_Click(object sender, RoutedEventArgs e)
@@ -733,27 +937,14 @@ public partial class MainWindow : Window
 
     private bool RequireAdmin()
     {
-        var currentUser = Environment.UserName;
-        var isAdmin = _store.Data.Users.Any(u => u.Active &&
-            u.UserName.Equals(currentUser, StringComparison.OrdinalIgnoreCase) &&
+        var currentUser = AppSession.CurrentUser;
+        var isAdmin = currentUser is not null && _store.Data.Users.Any(u => u.Active &&
+            u.Id == currentUser.Id &&
             (u.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
              u.Role.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase)));
         if (!isAdmin)
             MessageBox.Show("Only an active Admin can change business, integration, tax, user or workflow settings.", "Admin permission required");
         return isAdmin;
-    }
-
-    private async Task NotifySaleAsync(Sale sale)
-    {
-        var settings = _store.Data.Settings;
-        if (!settings.Notifications.SaleTimestampNotifications) return;
-        var result = await _integration.SendNotificationAsync("email",
-            $"Sale {sale.ReceiptNumber} at {sale.CreatedAt:O}: {sale.Total.ToString("C")}");
-        var notification = _store.Data.Notifications.LastOrDefault(n => n.Type == "Sale" && n.Message.Contains(sale.ReceiptNumber));
-        if (notification is not null) notification.Delivered = result.Success;
-        settings.Integrations.LastSyncMessage = result.Message;
-        _store.Save();
-        Dispatcher.Invoke(Refresh);
     }
 
     private async Task NotifyLowStockAsync()
@@ -804,11 +995,33 @@ public partial class MainWindow : Window
         {
             var print = new PrintDialog();
             if (print.ShowDialog() != true) return;
+            var settings = _store.Data.Settings;
             var document = new FlowDocument { PagePadding = new Thickness(30), FontFamily = new System.Windows.Media.FontFamily("Segoe UI") };
-            document.Blocks.Add(new Paragraph(new Run(_store.Data.Settings.BusinessName)) { FontSize = 18, FontWeight = FontWeights.Bold });
+            if (!string.IsNullOrWhiteSpace(settings.CompanyLogoPath))
+            {
+                var logoSource = new BitmapImage();
+                logoSource.BeginInit();
+                logoSource.CacheOption = BitmapCacheOption.OnLoad;
+                logoSource.UriSource = new Uri(System.IO.Path.GetFullPath(settings.CompanyLogoPath));
+                logoSource.EndInit();
+                logoSource.Freeze();
+                document.Blocks.Add(new BlockUIContainer(new Image
+                {
+                    Source = logoSource,
+                    Height = 48,
+                    MaxWidth = 180,
+                    Stretch = Stretch.Uniform,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                }) { TextAlignment = TextAlignment.Center });
+            }
+            document.Blocks.Add(new Paragraph(new Run(settings.BusinessName)) { FontSize = 18, FontWeight = FontWeights.Bold });
+            var businessDetails = string.Join(" • ", new[] { settings.Address, settings.City, settings.Country, settings.Phone, settings.Email }
+                .Where(detail => !string.IsNullOrWhiteSpace(detail)));
+            if (!string.IsNullOrWhiteSpace(businessDetails))
+                document.Blocks.Add(new Paragraph(new Run(businessDetails)));
             document.Blocks.Add(new Paragraph(new Run($"Receipt {sale.ReceiptNumber}\n{sale.CreatedAt:g}")));
             foreach (var line in sale.Lines) document.Blocks.Add(new Paragraph(new Run($"{line.Quantity} {line.UnitLabel} x {line.Name}  {line.LineTotal:C}")));
-            document.Blocks.Add(new Paragraph(new Run($"Subtotal: {sale.Subtotal:C}\nDiscount: {sale.Discount:C}\nVAT: {sale.Tax:C}\nTOTAL: {sale.Total:C}\n\n{_store.Data.Settings.ReceiptFooter}")));
+            document.Blocks.Add(new Paragraph(new Run($"Subtotal: {sale.Subtotal:C}\nDiscount: {sale.Discount:C}\nVAT: {sale.Tax:C}\nTOTAL: {sale.Total:C}\n\n{settings.ReceiptFooter}")));
             print.PrintDocument(((IDocumentPaginatorSource)document).DocumentPaginator, sale.ReceiptNumber);
         }
         catch (Exception ex) { MessageBox.Show($"Printing failed: {ex.Message}"); }

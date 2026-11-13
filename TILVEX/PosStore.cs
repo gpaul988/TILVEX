@@ -38,16 +38,6 @@ public sealed class PosStore
 
         Data.Products ??= [];
         Data.Sales ??= [];
-        if (Data.Products.Count == 0)
-        {
-            Data.Products.AddRange([
-                new Product { Sku = "GAS-6KG", Barcode = "GAS-6KG", Name = "6kg LPG Cylinder", Category = "Gas", Price = 32.50m, StockQuantity = 20, ReorderLevel = 5, Unit = UnitOfMeasure.Each, UnitLabel = "cylinder" },
-                new Product { Sku = "GAS-13KG", Barcode = "GAS-13KG", Name = "13kg LPG Cylinder", Category = "Gas", Price = 58.00m, StockQuantity = 12, ReorderLevel = 4, Unit = UnitOfMeasure.Each, UnitLabel = "cylinder" },
-                new Product { Sku = "REG-01", Barcode = "REG-01", Name = "Gas Regulator", Category = "Accessories", Price = 18.95m, StockQuantity = 15, ReorderLevel = 3, Unit = UnitOfMeasure.Each, UnitLabel = "each" }
-            ]);
-            Save();
-        }
-
         EnsureDefaults();
         Save();
     }
@@ -136,6 +126,12 @@ public sealed class PosStore
 
     private void EnsureDefaults()
     {
+        var existingProfileWasConfigured =
+            !string.IsNullOrWhiteSpace(Data.Settings?.BusinessName) &&
+            (!Data.Settings.BusinessName.Equals("TILVEX", StringComparison.OrdinalIgnoreCase) ||
+             !string.IsNullOrWhiteSpace(Data.Settings.Address) ||
+             !string.IsNullOrWhiteSpace(Data.Settings.Phone));
+        var needsSetupMigration = Data.SchemaVersion < 4;
         Data.Products ??= [];
         Data.Sales ??= [];
         Data.Users ??= [];
@@ -199,6 +195,8 @@ public sealed class PosStore
         Data.Settings.Notifications ??= new NotificationSettings();
         Data.Settings.Reports ??= new ReportSettings();
         Data.Settings.Integrations ??= new IntegrationSettings();
+        if (needsSetupMigration && existingProfileWasConfigured)
+            Data.Settings.SetupCompleted = true;
         if (string.IsNullOrWhiteSpace(Data.Settings.Integrations.WhatsAppWebhookUrl))
             Data.Settings.Integrations.WhatsAppWebhookUrl = Data.Settings.Notifications.WhatsAppWebhookUrl;
         if (string.IsNullOrWhiteSpace(Data.Settings.Integrations.SmsWebhookUrl))
@@ -210,7 +208,7 @@ public sealed class PosStore
             if (string.IsNullOrWhiteSpace(product.Barcode)) product.Barcode = product.Sku;
             if (string.IsNullOrWhiteSpace(product.UnitLabel)) product.UnitLabel = product.Unit.ToString();
         }
-        Data.SchemaVersion = 3;
+        Data.SchemaVersion = 4;
     }
 
     public string Backup()

@@ -6,21 +6,21 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanMinimize"
         Icon="Assets/tilvex-icon.png"
-        Background="#0B1726">
+        Background="#111827">
     <Window.Resources>
-        <SolidColorBrush x:Key="BrandDark" Color="#0B1726"/>
-        <SolidColorBrush x:Key="BrandTeal" Color="#00C7B7"/>
-        <SolidColorBrush x:Key="BrandTealDeep" Color="#0AA89A"/>
-        <SolidColorBrush x:Key="BrandSoft" Color="#EAFBF8"/>
+        <SolidColorBrush x:Key="BrandDark" Color="#111827"/>
+        <SolidColorBrush x:Key="BrandTeal" Color="#0F9F78"/>
+        <SolidColorBrush x:Key="BrandTealDeep" Color="#0B805E"/>
+        <SolidColorBrush x:Key="BrandSoft" Color="#E8F7F1"/>
         <SolidColorBrush x:Key="PanelSurface" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="Muted" Color="#5A6B82"/>
-        <SolidColorBrush x:Key="Line" Color="#DFEAF3"/>
+        <SolidColorBrush x:Key="Muted" Color="#6B778A"/>
+        <SolidColorBrush x:Key="Line" Color="#E3E9F0"/>
 
         <Style x:Key="AuthInput" TargetType="TextBox">
             <Setter Property="Height" Value="42"/>
             <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="Background" Value="#F8FBFF"/>
-            <Setter Property="BorderBrush" Value="#D7E3EF"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#D8E0EA"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -29,8 +29,8 @@
         <Style x:Key="AuthPassword" TargetType="PasswordBox">
             <Setter Property="Height" Value="42"/>
             <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="Background" Value="#F8FBFF"/>
-            <Setter Property="BorderBrush" Value="#D7E3EF"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#D8E0EA"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -38,7 +38,7 @@
 
         <Style x:Key="PrimaryAuthButton" TargetType="Button">
             <Setter Property="Height" Value="44"/>
-            <Setter Property="Background" Value="#00C7B7"/>
+            <Setter Property="Background" Value="#0F9F78"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -57,9 +57,9 @@
 
         <Style x:Key="SecondaryAuthButton" TargetType="Button">
             <Setter Property="Height" Value="40"/>
-            <Setter Property="Background" Value="#EEF7F6"/>
-            <Setter Property="Foreground" Value="#0B1726"/>
-            <Setter Property="BorderBrush" Value="#CDECE6"/>
+            <Setter Property="Background" Value="#F1F7F4"/>
+            <Setter Property="Foreground" Value="#172334"/>
+            <Setter Property="BorderBrush" Value="#D8E9E1"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -111,7 +111,7 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Column="1" Background="#F4F8FB">
+        <Grid Grid.Column="1" Background="#F4F7FB">
             <TabControl Margin="42,20,42,20" Background="Transparent" BorderThickness="0" SelectedIndex="0">
                 <TabControl.Resources>
                     <Style TargetType="TabItem">
@@ -123,7 +123,7 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="Border" Property="BorderBrush" Value="#00C7B7"/>
+                                            <Setter TargetName="Border" Property="BorderBrush" Value="#0F9F78"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -158,12 +158,12 @@
 
                         <StackPanel Grid.Row="3" Margin="0,18,0,0">
                             <TextBlock Text="Password" Foreground="#485E7B" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <PasswordBox x:Name="LoginPassword" Style="{StaticResource AuthPassword}" Password="Tilvex123!"/>
+                            <PasswordBox x:Name="LoginPassword" Style="{StaticResource AuthPassword}"/>
                         </StackPanel>
 
                         <Button Grid.Row="4" Margin="0,28,0,0" Style="{StaticResource PrimaryAuthButton}" Content="Sign in" Click="LoginButton_Click"/>
 
-                        <Border Grid.Row="5" Margin="0,24,0,0" Padding="16,12" Background="#EAFBF8" CornerRadius="10" BorderBrush="#CDECE6" BorderThickness="1">
+                        <Border Grid.Row="5" Margin="0,24,0,0" Padding="16,12" Background="#E8F7F1" CornerRadius="10" BorderBrush="#D8E9E1" BorderThickness="1">
                             <TextBlock Foreground="#0F6D5F" Text="Default admin access: admin@tilvex.local / Tilvex123!" FontWeight="SemiBold"/>
                         </Border>
                     </Grid>

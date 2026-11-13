@@ -1,0 +1,235 @@
+<Window x:Class="TILVEX.SetupWizard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Set up your TILVEX workspace"
+        Width="1080" Height="760" MinWidth="900" MinHeight="650"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        Background="#F3F6FA" FontFamily="Segoe UI" FontSize="13"
+        Icon="Assets/tilvex-icon.png">
+    <Window.Resources>
+        <SolidColorBrush x:Key="Ink" Color="#172334"/>
+        <SolidColorBrush x:Key="Muted" Color="#68778B"/>
+        <SolidColorBrush x:Key="Line" Color="#E1E8F0"/>
+        <SolidColorBrush x:Key="Accent" Color="#0F9F78"/>
+        <Style x:Key="WizardInput" TargetType="TextBox">
+            <Setter Property="MinHeight" Value="40"/>
+            <Setter Property="Padding" Value="11,8"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+            <Setter Property="BorderBrush" Value="#D5DFE9"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="BusinessTypeCard" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="CardBorder" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="CardBorder" Property="Background" Value="#F2FBF7"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="CardBorder" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#0F9F78"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="22,12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#EEF3F7"/>
+            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Margin="2,0,2,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="38" Height="38" CornerRadius="10" Background="{StaticResource Accent}">
+                        <TextBlock Text="T" Foreground="White" FontSize="21" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="TILVEX" Foreground="{StaticResource Ink}" FontSize="17" FontWeight="Bold"/>
+                        <TextBlock Text="WORKSPACE SETUP" Foreground="{StaticResource Muted}" FontSize="9" FontWeight="Bold"/>
+                    </StackPanel>
+                </StackPanel>
+                <TextBlock Text="Let’s tailor your point of sale" Foreground="{StaticResource Ink}"
+                           FontSize="28" FontWeight="SemiBold" Margin="0,18,0,3"/>
+                <TextBlock Text="Your choices stay on this device. You can update everything later in Settings."
+                           Foreground="{StaticResource Muted}" FontSize="13"/>
+            </StackPanel>
+            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1"
+                    CornerRadius="12" Padding="16,12" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock x:Name="StepCounterText" Text="STEP 1 OF 2" Foreground="{StaticResource Accent}"
+                               FontSize="10" FontWeight="Bold"/>
+                    <TextBlock x:Name="StepTitleText" Text="Business type" Foreground="{StaticResource Ink}"
+                               FontWeight="SemiBold" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1"
+                CornerRadius="18" Padding="24">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,17">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock x:Name="PageHeadingText" Text="What kind of business are you setting up?"
+                                   Foreground="{StaticResource Ink}" FontSize="21" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="PageDescriptionText"
+                                   Text="We’ll configure useful defaults while keeping every option editable."
+                                   Foreground="{StaticResource Muted}" Margin="0,5,0,0"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="1  ━━━━━━━━━━━  2" Foreground="{StaticResource Accent}"
+                               FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <UniformGrid x:Name="BusinessTypeGrid" Columns="4" Margin="0,0,0,12"/>
+                </ScrollViewer>
+
+                <Grid x:Name="BusinessDetailsPanel" Grid.Row="1" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.25*"/>
+                        <ColumnDefinition Width="0.9*"/>
+                    </Grid.ColumnDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,18,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,14">
+                                <TextBlock Text="Business name *" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="BusinessNameBox" Style="{StaticResource WizardInput}" ToolTip="Name shown on the register and receipts"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,14">
+                                <TextBlock Text="Business email" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="BusinessEmailBox" Style="{StaticResource WizardInput}" ToolTip="Optional contact address"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,14">
+                                <TextBlock Text="Phone" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="BusinessPhoneBox" Style="{StaticResource WizardInput}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,14">
+                                <TextBlock Text="Street address" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="BusinessAddressBox" Style="{StaticResource WizardInput}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,8,14">
+                                <TextBlock Text="City" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="BusinessCityBox" Style="{StaticResource WizardInput}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="3" Grid.Column="1" Margin="8,0,0,14">
+                                <TextBlock Text="Country" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="BusinessCountryBox" Style="{StaticResource WizardInput}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,8,14">
+                                <TextBlock Text="Currency" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <ComboBox x:Name="CurrencyCombo" MinHeight="40" Padding="10,7" SelectedValuePath="Tag"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="4" Grid.Column="1" Margin="8,0,0,14">
+                                <TextBlock Text="Tax rate (%)" Foreground="{StaticResource Ink}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="TaxRateBox" Style="{StaticResource WizardInput}"/>
+                            </StackPanel>
+                            <CheckBox x:Name="TaxInclusiveBox" Grid.Row="5" Grid.ColumnSpan="2"
+                                      Content="Product prices already include tax" Foreground="{StaticResource Ink}"/>
+                        </Grid>
+                    </ScrollViewer>
+                    <Border Grid.Column="1" Background="#F4F8FB" CornerRadius="14" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="YOUR REGISTER, YOUR RULES" Foreground="{StaticResource Accent}"
+                                       FontSize="10" FontWeight="Bold"/>
+                            <TextBlock Text="A better first day starts with the right details."
+                                       Foreground="{StaticResource Ink}" FontSize="20" FontWeight="SemiBold"
+                                       TextWrapping="Wrap" Margin="0,10,0,8"/>
+                            <TextBlock Text="Business details appear on receipts. Currency and tax are used in totals and reports. You can change them later in Settings."
+                                       Foreground="{StaticResource Muted}" TextWrapping="Wrap" LineHeight="21"/>
+                            <Border Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                    CornerRadius="10" Padding="12" Margin="0,20,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="LOCAL-FIRST BY DESIGN" Foreground="{StaticResource Ink}"
+                                               FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock Text="Your workspace is stored on this computer. Your catalog starts empty, so no sample prices or stock are mistaken for real data."
+                                               Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Row="2" Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock x:Name="ErrorText" Grid.Row="0" Foreground="#C2413A" TextWrapping="Wrap"
+                               Margin="0,0,0,8" Visibility="Collapsed"/>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="BackButton" Content="Back" Style="{StaticResource SecondaryButton}"
+                                HorizontalAlignment="Left" Click="Back_Click" Visibility="Collapsed"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Exit setup" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"
+                                    Click="Exit_Click"/>
+                            <Button x:Name="ContinueButton" Content="Continue" Style="{StaticResource PrimaryButton}"
+                                    Click="Continue_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
