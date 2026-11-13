@@ -134,6 +134,11 @@ public sealed class PosStore
         var needsSetupMigration = Data.SchemaVersion < 4;
         Data.Products ??= [];
         Data.Sales ??= [];
+        foreach (var sale in Data.Sales)
+        {
+            sale.Lines ??= [];
+            sale.Payments ??= [];
+        }
         Data.Users ??= [];
         var adminEmail = "admin@tilvex.local";
         if (Data.Users.Count == 0)
@@ -190,8 +195,13 @@ public sealed class PosStore
         Data.Returns ??= [];
         Data.Promotions ??= [];
         Data.TillSessions ??= [];
+        Data.Expenses ??= [];
+        Data.LedgerTransactions ??= [];
+        Data.StockAdjustments ??= [];
         Data.Workflows ??= [];
         Data.Notifications ??= [];
+        foreach (var sale in Data.Sales.Where(sale => string.IsNullOrWhiteSpace(sale.CustomerName) && sale.CustomerId.HasValue))
+            sale.CustomerName = Data.Customers.FirstOrDefault(customer => customer.Id == sale.CustomerId)?.Name ?? "";
         Data.Settings.Notifications ??= new NotificationSettings();
         Data.Settings.Reports ??= new ReportSettings();
         Data.Settings.Integrations ??= new IntegrationSettings();
@@ -208,7 +218,7 @@ public sealed class PosStore
             if (string.IsNullOrWhiteSpace(product.Barcode)) product.Barcode = product.Sku;
             if (string.IsNullOrWhiteSpace(product.UnitLabel)) product.UnitLabel = product.Unit.ToString();
         }
-        Data.SchemaVersion = 4;
+        Data.SchemaVersion = 5;
     }
 
     public string Backup()

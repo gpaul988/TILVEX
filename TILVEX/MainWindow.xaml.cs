@@ -17,6 +17,7 @@ namespace TILVEX;
 public partial class MainWindow : Window
 {
     private sealed record BusinessTypeOption(BusinessType Type, string DisplayName);
+    private sealed record LedgerEntryView(DateTime Date, string Entry, string Reference, decimal Debit, decimal Credit, decimal Balance);
 
     private readonly PosStore _store = new();
     private IPosIntegrationService _integration = null!;
@@ -55,7 +56,27 @@ public partial class MainWindow : Window
             return;
 
         MainTabs.SelectedIndex = tabIndex;
-        MainPageTitle.Text = tabIndex == 1 ? "Point of sale" : "Business command centre";
+        MainPageTitle.Text = tabIndex switch
+        {
+            0 => "Business command centre",
+            1 => "Point of sale",
+            2 => "Product management",
+            3 => "Sales management",
+            4 => "Customers",
+            5 => "Purchase management",
+            6 => "Returns & refunds",
+            7 => "Promotions & VAT",
+            8 => "Till reconciliation",
+            9 => "Reports & export",
+            10 => "Settings & users",
+            11 => "Database tools",
+            12 => "Price checker",
+            13 => "Inventory management",
+            14 => "Expense management",
+            15 => "Customer & supplier ledgers",
+            16 => "Shift management",
+            _ => "Business command centre"
+        };
         HeaderSubtitle.Text = tabIndex switch
         {
             0 => "Sales, stock and daily operations",
@@ -70,6 +91,11 @@ public partial class MainWindow : Window
             9 => "Review performance and export business data",
             10 => "Manage business settings, users and integrations",
             11 => "Import, export and migrate local POS data",
+            12 => "Find a product and confirm its current selling price and availability",
+            13 => "Monitor stock levels and record inventory adjustments",
+            14 => "Record and review day-to-day operating expenses",
+            15 => "Review customer receivables and supplier payables",
+            16 => "Open, monitor and close cashier shifts",
             _ => "Sales, stock and daily operations"
         };
     }
@@ -94,7 +120,7 @@ public partial class MainWindow : Window
         ProductCategoryCombo.SelectedIndex = 0;
         RefreshSaleProducts();
         InventoryGrid.ItemsSource = products;
-        SalesHistoryGrid.ItemsSource = _store.Data.Sales.OrderByDescending(s => s.CreatedAt).ToList();
+        RefreshSalesHistory();
         RecentSalesGrid.ItemsSource = _store.Data.Sales.OrderByDescending(s => s.CreatedAt).Take(10).ToList();
         CustomersGrid.ItemsSource = _store.Data.Customers.OrderBy(c => c.Name).ToList();
         CustomerCombo.ItemsSource = _store.Data.Customers.OrderBy(c => c.Name).ToList();
@@ -106,8 +132,15 @@ public partial class MainWindow : Window
         PromotionsGrid.ItemsSource = _store.Data.Promotions.OrderBy(p => p.Name).ToList();
         PromotionCombo.ItemsSource = _store.Data.Promotions.Where(p => p.Active && (!p.ExpiresAt.HasValue || p.ExpiresAt >= DateTime.Today)).ToList();
         TillGrid.ItemsSource = _store.Data.TillSessions.OrderByDescending(t => t.OpenedAt).ToList();
+        ShiftTillGrid.ItemsSource = _store.Data.TillSessions.OrderByDescending(t => t.OpenedAt).ToList();
         UsersGrid.ItemsSource = _store.Data.Users.OrderBy(u => u.UserName).ToList();
         WorkflowsGrid.ItemsSource = _store.Data.Workflows.OrderBy(w => w.Name).ToList();
+        ExpensesGrid.ItemsSource = _store.Data.Expenses.OrderByDescending(expense => expense.CreatedAt).ToList();
+        InventoryAdjustmentsGrid.ItemsSource = _store.Data.StockAdjustments.OrderByDescending(adjustment => adjustment.CreatedAt).Take(100).ToList();
+        RefreshPriceLookup();
+        RefreshInventoryView();
+        RefreshLedgerParties();
+        RefreshShiftStatus();
         ProductCountText.Text = products.Count.ToString();
         var lowStock = products.Where(IsLowStock).ToList();
         LowStockText.Text = lowStock.Count.ToString();
@@ -477,11 +510,19 @@ public partial class MainWindow : Window
             if (line.Quantity > product.StockQuantity) { MessageBox.Show($"Not enough stock for {product.Name}."); return; }
         }
         var paymentMethod = (PaymentCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cash";
+        var isOnAccount = paymentMethod.Equals("On account", StringComparison.OrdinalIgnoreCase);
+        var customer = CustomerCombo.SelectedItem as Customer;
+        if (isOnAccount && customer is null)
+        {
+            MessageBox.Show("Select a customer before recording a sale on account.");
+            return;
+        }
         var tendered = decimal.TryParse(TenderedBox.Text, out var amount) ? amount : 0;
         var sale = new Sale
         {
             ReceiptNumber = $"GG-{DateTime.Now:yyyyMMdd-HHmmss}",
-            CustomerId = (CustomerCombo.SelectedItem as Customer)?.Id,
+            CustomerId = customer?.Id,
+            CustomerName = customer?.Name ?? "",
             Discount = CalculateDiscount(),
             TaxRate = _store.Data.Tax.Rate,
             TaxInclusive = _store.Data.Tax.Inclusive,
@@ -489,8 +530,8 @@ public partial class MainWindow : Window
             Tendered = tendered
         };
         sale.Lines.AddRange(_cart.Select(line => new SaleLine { ProductId = line.ProductId, Sku = line.Sku, Name = line.Name, UnitPrice = line.UnitPrice, Quantity = line.Quantity, Unit = line.Unit, UnitLabel = line.UnitLabel }));
-        sale.Payments = ParsePayments(paymentMethod, TenderedBox.Text, sale.Total);
-        if (sale.Payments.Count == 0 || Math.Abs(sale.Payments.Sum(p => p.Amount) - sale.Total) > 0.005m)
+        sale.Payments = isOnAccount ? [] : ParsePayments(paymentMethod, TenderedBox.Text, sale.Total);
+        if (!isOnAccount && (sale.Payments.Count == 0 || Math.Abs(sale.Payments.Sum(p => p.Amount) - sale.Total) > 0.005m))
         {
             MessageBox.Show($"Payment allocations must equal the sale total ({sale.Total:C}). For split payment enter: Cash:10, Gift card:5 in Tendered.");
             return;
@@ -509,7 +550,8 @@ public partial class MainWindow : Window
         CartGrid.Items.Refresh();
         Refresh();
         _ = NotifyLowStockAsync();
-        MessageBox.Show($"Receipt {sale.ReceiptNumber}\n\nTOTAL: {sale.Total:C}\nChange: {sale.Change:C}", "Sale completed");
+        MessageBox.Show($"Receipt {sale.ReceiptNumber}\n\nTOTAL: {sale.Total:C}" +
+                        (isOnAccount ? $"\nCharged to {customer!.Name}'s account." : $"\nChange: {sale.Change:C}"), "Sale completed");
         PrintSale(sale);
     }
 
@@ -542,6 +584,7 @@ public partial class MainWindow : Window
         "on account" => "On account",
         "store credit" => "Store credit",
         "bank transfer" => "Bank transfer",
+        "card" => "Card",
         _ => "Cash"
     };
 
@@ -552,6 +595,16 @@ public partial class MainWindow : Window
     }
 
     private void TenderedBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateCartTotal();
+
+    private void PaymentCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (TenderedBox is null || PaymentAmountLabel is null) return;
+        var onAccount = (PaymentCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() == "On account";
+        PaymentAmountLabel.Text = onAccount ? "No payment collected" : "Paid amount";
+        TenderedBox.IsEnabled = !onAccount;
+        if (onAccount) TenderedBox.Text = "0";
+        UpdateCartTotal();
+    }
 
     private void UpdateCartTotal()
     {
@@ -571,8 +624,9 @@ public partial class MainWindow : Window
         CartDiscountText.Text = discount.ToString("C");
         CartTaxText.Text = tax.ToString("C");
         CartTotalText.Text = total.ToString("C");
+        var isOnAccount = (PaymentCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() == "On account";
         var tendered = decimal.TryParse(TenderedBox.Text, out var t) ? t : 0;
-        ChangeText.Text = Math.Max(0, tendered - total).ToString("C");
+        ChangeText.Text = isOnAccount ? "On account" : Math.Max(0, tendered - total).ToString("C");
     }
 
     private void InventoryGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -597,14 +651,275 @@ public partial class MainWindow : Window
             !decimal.TryParse(PriceBox.Text, out var price) ||                 !decimal.TryParse(StockBox.Text, out var stock) ||
                 !decimal.TryParse(ReorderBox.Text, out var reorder) || price < 0 || stock < 0 || reorder < 0)
         { MessageBox.Show("Enter a SKU, name, valid price, stock quantity and reorder level."); return; }
+        var barcode = string.IsNullOrWhiteSpace(BarcodeProductBox.Text) ? SkuBox.Text.Trim() : BarcodeProductBox.Text.Trim();
+        if (_store.Data.Products.Any(existing => existing.Id != _selectedProduct?.Id &&
+            (existing.Sku.Equals(SkuBox.Text.Trim(), StringComparison.OrdinalIgnoreCase) ||
+             existing.Barcode.Equals(barcode, StringComparison.OrdinalIgnoreCase))))
+        {
+            MessageBox.Show("Each product must have a unique SKU and barcode.");
+            return;
+        }
         var product = _selectedProduct ?? new Product();
-        product.Sku = SkuBox.Text.Trim(); product.Barcode = string.IsNullOrWhiteSpace(BarcodeProductBox.Text) ? product.Sku : BarcodeProductBox.Text.Trim();
+        product.Sku = SkuBox.Text.Trim(); product.Barcode = barcode;
         product.Name = NameBox.Text.Trim(); product.Category = CategoryBox.Text.Trim();
         product.Unit = UnitCombo.SelectedItem is UnitOfMeasure unit ? unit : UnitOfMeasure.Each;
         product.UnitLabel = string.IsNullOrWhiteSpace(UnitLabelBox.Text) ? product.Unit.ToString() : UnitLabelBox.Text.Trim();
         product.Price = price; product.StockQuantity = stock; product.ReorderLevel = reorder;
         if (_selectedProduct is null) _store.Data.Products.Add(product);
         _store.Save(); Refresh(); InventoryGrid.SelectedItem = product;
+    }
+
+    private void PriceLookupBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            RefreshPriceLookup();
+            e.Handled = true;
+        }
+    }
+
+    private void PriceLookupBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshPriceLookup();
+
+    private void ClearPriceLookup_Click(object sender, RoutedEventArgs e) => PriceLookupBox.Clear();
+
+    private void SalesHistorySearchBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshSalesHistory();
+
+    private void RefreshSalesHistory()
+    {
+        if (SalesHistoryGrid is null || SalesHistorySearchBox is null) return;
+        var query = SalesHistorySearchBox.Text.Trim();
+        SalesHistoryGrid.ItemsSource = _store.Data.Sales
+            .Where(sale => query.Length == 0 ||
+                           sale.ReceiptNumber.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                           sale.PaymentMethod.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                           sale.CustomerName.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(sale => sale.CreatedAt)
+            .ToList();
+    }
+
+    private void RefreshPriceLookup()
+    {
+        if (PriceLookupBox is null || PriceLookupResultText is null || PriceLookupStockText is null) return;
+        var query = PriceLookupBox.Text.Trim();
+        if (query.Length == 0)
+        {
+            PriceLookupResultText.Text = "Scan a barcode or search by product name or SKU.";
+            PriceLookupStockText.Text = "";
+            return;
+        }
+
+        var matches = _store.Data.Products.Where(product =>
+            product.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            product.Sku.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            product.Barcode.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
+        if (matches.Count == 0)
+        {
+            PriceLookupResultText.Text = "No matching product found.";
+            PriceLookupStockText.Text = "";
+            return;
+        }
+
+        var product = matches[0];
+        PriceLookupResultText.Text = $"{product.Name}\n{product.Sku}  ·  {product.Category}";
+        PriceLookupStockText.Text = $"{product.Price:C}  ·  {product.StockQuantity:0.##} {product.UnitLabel} in stock" +
+                                    (matches.Count > 1 ? "\nMore than one product matches; refine the search." : "");
+    }
+
+    private void InventorySearchBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshInventoryView();
+
+    private void InventoryFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshInventoryView();
+
+    private void RefreshInventoryView()
+    {
+        if (InventoryManagementGrid is null || InventorySearchBox is null || InventoryFilterCombo is null) return;
+        var query = InventorySearchBox.Text.Trim();
+        var filter = (InventoryFilterCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "All stock";
+        var products = _store.Data.Products.Where(product =>
+            query.Length == 0 ||
+            product.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            product.Sku.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            product.Barcode.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            product.Category.Contains(query, StringComparison.OrdinalIgnoreCase));
+        products = filter switch
+        {
+            "Reorder needed" => products.Where(IsLowStock),
+            "Out of stock" => products.Where(product => product.StockQuantity <= 0),
+            _ => products
+        };
+        var result = products.OrderBy(product => product.Name).ToList();
+        InventoryManagementGrid.ItemsSource = result;
+        if (InventoryManagementCountText is not null)
+            InventoryManagementCountText.Text = $"{result.Count} products · {result.Sum(product => product.StockQuantity):0.##} units on hand";
+    }
+
+    private void AdjustInventory_Click(object sender, RoutedEventArgs e)
+    {
+        if (InventoryManagementGrid.SelectedItem is not Product product)
+        {
+            MessageBox.Show("Select a product before adjusting stock.");
+            return;
+        }
+        if (!decimal.TryParse(InventoryAdjustmentQuantityBox.Text, out var adjustment) || adjustment == 0 ||
+            string.IsNullOrWhiteSpace(InventoryAdjustmentReasonBox.Text))
+        {
+            MessageBox.Show("Enter a non-zero quantity change and a reason for the adjustment.");
+            return;
+        }
+        if (product.StockQuantity + adjustment < 0)
+        {
+            MessageBox.Show($"This adjustment cannot reduce {product.Name} below zero stock.");
+            return;
+        }
+
+        product.StockQuantity += adjustment;
+        _store.Data.StockAdjustments.Add(new StockAdjustment
+        {
+            ProductId = product.Id,
+            ProductName = product.Name,
+            QuantityChange = adjustment,
+            QuantityAfter = product.StockQuantity,
+            Reason = InventoryAdjustmentReasonBox.Text.Trim(),
+            RecordedBy = AppSession.CurrentUser?.UserName ?? "operator"
+        });
+        _store.Save();
+        InventoryAdjustmentQuantityBox.Clear();
+        InventoryAdjustmentReasonBox.Clear();
+        Refresh();
+    }
+
+    private void SaveExpense_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(ExpenseCategoryBox.Text) ||
+            string.IsNullOrWhiteSpace(ExpenseDescriptionBox.Text) ||
+            !decimal.TryParse(ExpenseAmountBox.Text, out var amount) || amount <= 0)
+        {
+            MessageBox.Show("Enter an expense category, description and amount greater than zero.");
+            return;
+        }
+
+        var paymentMethod = (ExpensePaymentCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cash";
+        _store.Data.Expenses.Add(new OperatingExpense
+        {
+            Category = ExpenseCategoryBox.Text.Trim(),
+            Description = ExpenseDescriptionBox.Text.Trim(),
+            Amount = amount,
+            PaymentMethod = paymentMethod,
+            Reference = ExpenseReferenceBox.Text.Trim(),
+            RecordedBy = AppSession.CurrentUser?.UserName ?? "operator"
+        });
+        _store.Save();
+        ExpenseDescriptionBox.Clear();
+        ExpenseAmountBox.Clear();
+        ExpenseReferenceBox.Clear();
+        Refresh();
+    }
+
+    private void LedgerPartyTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshLedgerParties();
+
+    private void LedgerPartyCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshLedger();
+
+    private void RefreshLedgerParties()
+    {
+        if (LedgerPartyTypeCombo is null || LedgerPartyCombo is null) return;
+        var type = (LedgerPartyTypeCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Customer";
+        var currentId = (LedgerPartyCombo.SelectedItem as Customer)?.Id ?? (LedgerPartyCombo.SelectedItem as Supplier)?.Id;
+        var parties = type == "Supplier"
+            ? _store.Data.Suppliers.OrderBy(supplier => supplier.Name).Cast<object>().ToList()
+            : _store.Data.Customers.OrderBy(customer => customer.Name).Cast<object>().ToList();
+        LedgerPartyCombo.ItemsSource = parties;
+        LedgerPartyCombo.DisplayMemberPath = nameof(Customer.Name);
+        LedgerPartyCombo.SelectedItem = parties.FirstOrDefault(party =>
+            party is Customer customer && customer.Id == currentId ||
+            party is Supplier supplier && supplier.Id == currentId);
+        RefreshLedger();
+    }
+
+    private void RefreshLedger()
+    {
+        if (LedgerEntriesGrid is null || LedgerPartyTypeCombo is null || LedgerPartyCombo is null) return;
+        var type = (LedgerPartyTypeCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Customer";
+        var partyId = (LedgerPartyCombo.SelectedItem as Customer)?.Id ?? (LedgerPartyCombo.SelectedItem as Supplier)?.Id ?? Guid.Empty;
+        if (partyId == Guid.Empty)
+        {
+            LedgerEntriesGrid.ItemsSource = Array.Empty<LedgerEntryView>();
+            LedgerBalanceText.Text = 0m.ToString("C");
+            return;
+        }
+
+        var rows = new List<(DateTime Date, string Entry, string Reference, decimal Debit, decimal Credit)>();
+        if (type == "Customer")
+        {
+            foreach (var sale in _store.Data.Sales.Where(sale => sale.CustomerId == partyId && sale.PaymentMethod == "On account"))
+            {
+                rows.Add((sale.CreatedAt, "Credit sale", sale.ReceiptNumber, sale.Total, 0));
+                var refund = _store.Data.Returns.FirstOrDefault(item =>
+                    item.ReceiptNumber.Equals(sale.ReceiptNumber, StringComparison.OrdinalIgnoreCase));
+                if (refund is not null)
+                    rows.Add((refund.CreatedAt, "Credit sale refund", refund.ReceiptNumber, 0, refund.Amount));
+            }
+        }
+        else
+        {
+            foreach (var purchase in _store.Data.PurchaseOrders.Where(order => order.SupplierId == partyId && order.Status == "Received"))
+                rows.Add((purchase.ReceivedAt ?? purchase.CreatedAt, "Received purchase", purchase.Number, 0, purchase.Total));
+        }
+
+        foreach (var transaction in _store.Data.LedgerTransactions.Where(item => item.PartyId == partyId && item.PartyType == type))
+        {
+            var isCustomerReceipt = type == "Customer";
+            rows.Add((transaction.CreatedAt, isCustomerReceipt ? "Customer receipt" : "Supplier payment",
+                transaction.Reference, isCustomerReceipt ? 0 : transaction.Amount, isCustomerReceipt ? transaction.Amount : 0));
+        }
+
+        decimal balance = 0;
+        var entries = rows.OrderBy(row => row.Date).Select(row =>
+        {
+            balance += type == "Customer" ? row.Debit - row.Credit : row.Credit - row.Debit;
+            return new LedgerEntryView(row.Date, row.Entry, row.Reference, row.Debit, row.Credit, balance);
+        }).ToList();
+        LedgerEntriesGrid.ItemsSource = entries.OrderByDescending(entry => entry.Date).ToList();
+        LedgerBalanceText.Text = balance.ToString("C");
+        LedgerBalanceCaptionText.Text = balance >= 0
+            ? type == "Customer" ? "Amount due from customer" : "Amount payable to supplier"
+            : type == "Customer" ? "Customer credit balance" : "Supplier account credit";
+    }
+
+    private void RecordLedgerPayment_Click(object sender, RoutedEventArgs e)
+    {
+        var type = (LedgerPartyTypeCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Customer";
+        var partyId = (LedgerPartyCombo.SelectedItem as Customer)?.Id ?? (LedgerPartyCombo.SelectedItem as Supplier)?.Id ?? Guid.Empty;
+        var partyName = (LedgerPartyCombo.SelectedItem as Customer)?.Name ?? (LedgerPartyCombo.SelectedItem as Supplier)?.Name;
+        if (partyId == Guid.Empty || string.IsNullOrWhiteSpace(partyName))
+        {
+            MessageBox.Show($"Select a {type.ToLowerInvariant()} first.");
+            return;
+        }
+        if (!decimal.TryParse(LedgerPaymentAmountBox.Text, out var amount) || amount <= 0)
+        {
+            MessageBox.Show("Enter a payment amount greater than zero.");
+            return;
+        }
+
+        RefreshLedger();
+        var balance = LedgerEntriesGrid.ItemsSource?.Cast<LedgerEntryView>().FirstOrDefault()?.Balance ?? 0;
+        if (amount > balance)
+        {
+            MessageBox.Show($"The payment cannot exceed the outstanding balance of {balance:C}.");
+            return;
+        }
+        _store.Data.LedgerTransactions.Add(new LedgerTransaction
+        {
+            PartyType = type,
+            PartyId = partyId,
+            Amount = amount,
+            PaymentMethod = (LedgerPaymentMethodCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cash",
+            Reference = LedgerPaymentReferenceBox.Text.Trim(),
+            RecordedBy = AppSession.CurrentUser?.UserName ?? "operator"
+        });
+        _store.Save();
+        LedgerPaymentAmountBox.Clear();
+        LedgerPaymentReferenceBox.Clear();
+        Refresh();
     }
 
     private void CustomersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -647,7 +962,10 @@ public partial class MainWindow : Window
         if (PurchaseSupplierCombo.SelectedItem is not Supplier supplier || PurchaseProductCombo.SelectedItem is not Product product ||
             !decimal.TryParse(PurchaseQtyBox.Text, out var qty) || !decimal.TryParse(PurchaseCostBox.Text, out var cost) || qty <= 0)
         { MessageBox.Show("Select a supplier and product and enter valid quantity/cost."); return; }
-        _draftPurchase ??= new PurchaseOrder { Number = $"PO-{DateTime.Now:yyyyMMdd-HHmmss}", SupplierId = supplier.Id };
+        if (_draftPurchase is null || _draftPurchase.Status != "Draft" || _draftPurchase.SupplierId != supplier.Id)
+        {
+            _draftPurchase = new PurchaseOrder { Number = $"PO-{DateTime.Now:yyyyMMdd-HHmmss}", SupplierId = supplier.Id };
+        }
         _draftPurchase.Lines.Add(new PurchaseOrderLine { ProductId = product.Id, ProductName = product.Name, Quantity = qty, UnitCost = cost, Unit = product.Unit });
         if (!_store.Data.PurchaseOrders.Contains(_draftPurchase)) _store.Data.PurchaseOrders.Add(_draftPurchase);
         _store.Save(); Refresh();
@@ -655,14 +973,20 @@ public partial class MainWindow : Window
 
     private void ReceivePurchase_Click(object sender, RoutedEventArgs e)
     {
-        var order = _store.Data.PurchaseOrders.FirstOrDefault(p => p.Status == "Draft");
+        var order = _draftPurchase is { Status: "Draft" }
+            ? _draftPurchase
+            : _store.Data.PurchaseOrders.LastOrDefault(p => p.Status == "Draft");
         if (order is null) { MessageBox.Show("Add a purchase order line first."); return; }
         foreach (var line in order.Lines)
         {
             var product = _store.Data.Products.FirstOrDefault(p => p.Id == line.ProductId);
             if (product is not null) product.StockQuantity += line.Quantity;
         }
-        order.Status = "Received"; _draftPurchase = null; _store.Save(); Refresh();
+        order.Status = "Received";
+        order.ReceivedAt = DateTime.Now;
+        _draftPurchase = null;
+        _store.Save();
+        Refresh();
     }
 
     private void RefundReceipt_Click(object sender, RoutedEventArgs e)
@@ -675,7 +999,13 @@ public partial class MainWindow : Window
             var product = _store.Data.Products.FirstOrDefault(p => p.Id == line.ProductId);
             if (product is not null) product.StockQuantity += line.Quantity;
         }
-        _store.Data.Returns.Add(new ReturnRecord { ReceiptNumber = sale.ReceiptNumber, Reason = ReturnReasonBox.Text.Trim(), Amount = sale.Total });
+        _store.Data.Returns.Add(new ReturnRecord
+        {
+            ReceiptNumber = sale.ReceiptNumber,
+            Reason = ReturnReasonBox.Text.Trim(),
+            Amount = sale.Total,
+            PaymentMethod = sale.PaymentMethod == "On account" ? "On account" : "Cash"
+        });
         _store.Save(); ReturnReceiptBox.Clear(); ReturnReasonBox.Clear(); Refresh();
     }
 
@@ -704,19 +1034,88 @@ public partial class MainWindow : Window
 
     private void OpenTill_Click(object sender, RoutedEventArgs e)
     {
-        if (_store.Data.TillSessions.Any(t => !t.ClosedAt.HasValue)) { MessageBox.Show("The till is already open."); return; }
         if (!decimal.TryParse(OpeningFloatBox.Text, out var opening) || opening < 0) { MessageBox.Show("Enter a valid opening float."); return; }
-        _store.Data.TillSessions.Add(new TillSession { OpeningFloat = opening }); _store.Save(); Refresh();
+        StartTill(opening);
+    }
+
+    private void OpenShift_Click(object sender, RoutedEventArgs e)
+    {
+        if (!decimal.TryParse(ShiftOpeningFloatBox.Text, out var opening) || opening < 0) { MessageBox.Show("Enter a valid opening float."); return; }
+        StartTill(opening);
+    }
+
+    private void StartTill(decimal opening)
+    {
+        if (_store.Data.TillSessions.Any(t => !t.ClosedAt.HasValue)) { MessageBox.Show("The till is already open."); return; }
+        _store.Data.TillSessions.Add(new TillSession
+        {
+            OpeningFloat = opening,
+            OpenedBy = AppSession.CurrentUser?.UserName ?? "operator"
+        });
+        _store.Save();
+        Refresh();
     }
 
     private void CloseTill_Click(object sender, RoutedEventArgs e)
     {
+        if (!decimal.TryParse(CountedCashBox.Text, out var counted) || counted < 0) { MessageBox.Show("Enter counted cash."); return; }
+        EndTill(counted);
+    }
+
+    private void CloseShift_Click(object sender, RoutedEventArgs e)
+    {
+        if (!decimal.TryParse(ShiftCountedCashBox.Text, out var counted) || counted < 0) { MessageBox.Show("Enter counted cash."); return; }
+        EndTill(counted);
+    }
+
+    private void EndTill(decimal counted)
+    {
         var till = _store.Data.TillSessions.LastOrDefault(t => !t.ClosedAt.HasValue);
         if (till is null) { MessageBox.Show("Open the till first."); return; }
-        if (!decimal.TryParse(CountedCashBox.Text, out var counted) || counted < 0) { MessageBox.Show("Enter counted cash."); return; }
-        till.ExpectedCash = till.OpeningFloat + _store.Data.Sales.Where(s => s.CreatedAt >= till.OpenedAt && s.PaymentMethod == "Cash").Sum(s => s.Total) - _store.Data.Returns.Where(r => r.CreatedAt >= till.OpenedAt).Sum(r => r.Amount);
-        till.CountedCash = counted; till.ClosedAt = DateTime.Now; _store.Save(); Refresh();
+        var cashSales = _store.Data.Sales.Where(sale => sale.CreatedAt >= till.OpenedAt)
+            .Sum(sale => sale.Payments.Count > 0
+                ? sale.Payments.Where(payment => payment.Method == "Cash").Sum(payment => payment.Amount)
+                : sale.PaymentMethod == "Cash" ? sale.Total : 0);
+        var cashExpenses = _store.Data.Expenses.Where(expense =>
+            expense.CreatedAt >= till.OpenedAt && expense.PaymentMethod == "Cash").Sum(expense => expense.Amount);
+        var cashLedgerReceipts = _store.Data.LedgerTransactions.Where(transaction =>
+            transaction.CreatedAt >= till.OpenedAt && transaction.PartyType == "Customer" &&
+            transaction.PaymentMethod == "Cash").Sum(transaction => transaction.Amount);
+        var cashSupplierPayments = _store.Data.LedgerTransactions.Where(transaction =>
+            transaction.CreatedAt >= till.OpenedAt && transaction.PartyType == "Supplier" &&
+            transaction.PaymentMethod == "Cash").Sum(transaction => transaction.Amount);
+        till.ExpectedCash = till.OpeningFloat + cashSales + cashLedgerReceipts - cashSupplierPayments - cashExpenses -
+                            _store.Data.Returns.Where(record => record.CreatedAt >= till.OpenedAt && record.PaymentMethod == "Cash")
+                                .Sum(record => record.Amount);
+        till.CountedCash = counted;
+        till.ClosedAt = DateTime.Now;
+        till.ClosedBy = AppSession.CurrentUser?.UserName ?? "operator";
+        _store.Save();
+        Refresh();
         MessageBox.Show($"Till closed. Variance: {till.Variance:C}");
+    }
+
+    private void RefreshShiftStatus()
+    {
+        if (CurrentShiftText is null || CurrentShiftSalesText is null) return;
+        var activeShift = _store.Data.TillSessions.LastOrDefault(till => !till.ClosedAt.HasValue);
+        if (activeShift is null)
+        {
+            CurrentShiftText.Text = "No shift is currently open.";
+            CurrentShiftSalesText.Text = "Open a till to begin tracking a cashier shift.";
+            return;
+        }
+
+        var sales = _store.Data.Sales.Where(sale => sale.CreatedAt >= activeShift.OpenedAt).ToList();
+        var saleCash = sales.Sum(sale => sale.Payments.Count > 0
+            ? sale.Payments.Where(payment => payment.Method == "Cash").Sum(payment => payment.Amount)
+            : sale.PaymentMethod == "Cash" ? sale.Total : 0);
+        var accountCash = _store.Data.LedgerTransactions.Where(transaction =>
+            transaction.CreatedAt >= activeShift.OpenedAt && transaction.PartyType == "Customer" &&
+            transaction.PaymentMethod == "Cash").Sum(transaction => transaction.Amount);
+        CurrentShiftText.Text = $"Open since {activeShift.OpenedAt:g} · {activeShift.OpenedBy}";
+        CurrentShiftSalesText.Text = $"{sales.Count} transactions · {sales.Sum(sale => sale.Total):C} gross sales · " +
+                                     $"{saleCash + accountCash:C} cash received";
     }
 
     private void RefreshReport_Click(object sender, RoutedEventArgs e)
@@ -724,12 +1123,25 @@ public partial class MainWindow : Window
         RefreshReport();
     }
 
+    private void ReportPeriodCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshReport();
+
     private void RefreshReport()
     {
-        var sales = _store.Data.Sales.Where(s => s.CreatedAt.Date == DateTime.Today).ToList();
-        var top = _store.Data.Sales.SelectMany(s => s.Lines).GroupBy(l => l.Name).OrderByDescending(g => g.Sum(l => l.Quantity)).Take(5).Select(g => $"{g.Key} ({g.Sum(l => l.Quantity)})");
-        ReportSummaryText.Text = $"Today: {sales.Count} transactions, {sales.Sum(s => s.Total):C} sales, {sales.Sum(s => s.Tax):C} VAT.\n" +
-                                 $"All time: {_store.Data.Sales.Count} transactions, {_store.Data.Sales.Sum(s => s.Total):C} sales, {_store.Data.Returns.Sum(r => r.Amount):C} refunds.\n" +
+        if (ReportSummaryText is null || ReportPeriodCombo is null) return;
+        var periodStart = ReportPeriodStart;
+        var sales = _store.Data.Sales.Where(sale => sale.CreatedAt >= periodStart && sale.CreatedAt <= DateTime.Now).ToList();
+        var expenses = _store.Data.Expenses.Where(expense => expense.CreatedAt >= periodStart && expense.CreatedAt <= DateTime.Now).ToList();
+        var refunds = _store.Data.Returns.Where(record => record.CreatedAt >= periodStart && record.CreatedAt <= DateTime.Now).ToList();
+        var top = sales.SelectMany(sale => sale.Lines).GroupBy(line => line.Name)
+            .OrderByDescending(group => group.Sum(line => line.Quantity)).Take(5)
+            .Select(group => $"{group.Key} ({group.Sum(line => line.Quantity)})");
+        var periodName = ReportPeriodCombo.SelectedIndex switch { 1 => "Last 7 days", 2 => "This month", _ => "Today" };
+        ReportSummaryText.Text = $"{periodName}: {sales.Count} transactions, {sales.Sum(sale => sale.Total):C} sales, " +
+                                 $"{sales.Sum(sale => sale.Tax):C} VAT, {expenses.Sum(expense => expense.Amount):C} expenses, " +
+                                 $"{refunds.Sum(record => record.Amount):C} refunds, " +
+                                 $"{sales.Sum(sale => sale.Total) - expenses.Sum(expense => expense.Amount) - refunds.Sum(record => record.Amount):C} " +
+                                 "sales less expenses and refunds (before cost of goods).\n" +
+                                 $"All time: {_store.Data.Sales.Count} transactions, {_store.Data.Sales.Sum(s => s.Total):C} sales, {_store.Data.Returns.Sum(r => r.Amount):C} refunds, {_store.Data.Expenses.Sum(expense => expense.Amount):C} expenses.\n" +
                                  $"Low stock: {_store.Data.Products.Count(IsLowStock)} (threshold {_store.Data.Settings.LowStockAlertThreshold:0.##}). Top products: {string.Join(", ", top)}";
     }
 
@@ -746,6 +1158,18 @@ public partial class MainWindow : Window
         var path = ChooseSavePath("Inventory CSV|*.csv", "inventory.csv"); if (path is null) return;
         File.WriteAllLines(path, new[] { "SKU,Name,Category,Price,Stock,ReorderLevel" }.Concat(_store.Data.Products.Select(p => CsvRow(p.Sku, p.Name, p.Category, p.Price, p.StockQuantity, p.ReorderLevel))), Encoding.UTF8);
         MessageBox.Show($"Exported {_store.Data.Products.Count} products.");
+    }
+
+    private void ExportExpensesCsv_Click(object sender, RoutedEventArgs e)
+    {
+        var path = ChooseSavePath("Expenses CSV|*.csv", "expenses.csv");
+        if (path is null) return;
+        var rows = new List<string> { "Date,Category,Description,Amount,Payment,Reference,RecordedBy" };
+        rows.AddRange(_store.Data.Expenses.OrderBy(expense => expense.CreatedAt)
+            .Select(expense => CsvRow(expense.CreatedAt.ToString("s"), expense.Category, expense.Description,
+                expense.Amount, expense.PaymentMethod, expense.Reference, expense.RecordedBy)));
+        File.WriteAllLines(path, rows, Encoding.UTF8);
+        MessageBox.Show($"Exported {rows.Count - 1} expenses.");
     }
 
     private static string Csv(object? value) => "\"" + (value?.ToString() ?? "").Replace("\"", "\"\"") + "\"";
@@ -982,12 +1406,17 @@ public partial class MainWindow : Window
     private void ExportPeriodCsv_Click(object sender, RoutedEventArgs e)
     {
         var path = ChooseSavePath("CSV report|*.csv", "sales-report.csv"); if (path is null) return;
-        var from = DateTime.Today.AddDays(-ReportPeriodDays); var to = DateTime.Now.AddSeconds(1);
+        var from = ReportPeriodStart; var to = DateTime.Now.AddSeconds(1);
         ReportExportService.ExportPeriodCsv(_store.Data, from, to, path);
         DatabaseStatusText.Text = $"Report exported: {path}";
     }
 
-    private int ReportPeriodDays => ReportPeriodCombo.SelectedIndex switch { 1 => 7, 2 => 30, _ => 1 };
+    private DateTime ReportPeriodStart => ReportPeriodCombo.SelectedIndex switch
+    {
+        1 => DateTime.Today.AddDays(-6),
+        2 => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
+        _ => DateTime.Today
+    };
 
     private void PrintSale(Sale sale)
     {

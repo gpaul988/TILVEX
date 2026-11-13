@@ -386,7 +386,7 @@
                             <StackPanel Orientation="Horizontal"><TextBlock Text="▣" Foreground="#0F9F78" Width="24"/><TextBlock Text="New sale"/></StackPanel>
                         </Button>
                         <Button Tag="3" Click="Navigate_Click" Style="{StaticResource NavButton}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="≡" Foreground="#0F9F78" Width="24"/><TextBlock Text="Sales history"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="≡" Foreground="#0F9F78" Width="24"/><TextBlock Text="Sales management"/></StackPanel>
                         </Button>
                         <Button Tag="6" Click="Navigate_Click" Style="{StaticResource NavButton}">
                             <StackPanel Orientation="Horizontal"><TextBlock Text="↩" Foreground="#0F9F78" Width="24"/><TextBlock Text="Returns &amp; refunds"/></StackPanel>
@@ -394,7 +394,13 @@
 
                         <TextBlock Text="CATALOGUE" Style="{StaticResource NavSection}"/>
                         <Button Tag="2" Click="Navigate_Click" Style="{StaticResource NavButton}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="□" Foreground="#0F9F78" Width="24"/><TextBlock Text="Products &amp; stock"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="□" Foreground="#0F9F78" Width="24"/><TextBlock Text="Product management"/></StackPanel>
+                        </Button>
+                        <Button Tag="13" Click="Navigate_Click" Style="{StaticResource NavButton}">
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="▥" Foreground="#0F9F78" Width="24"/><TextBlock Text="Inventory management"/></StackPanel>
+                        </Button>
+                        <Button Tag="12" Click="Navigate_Click" Style="{StaticResource NavButton}">
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="⌕" Foreground="#0F9F78" Width="24"/><TextBlock Text="Price checker"/></StackPanel>
                         </Button>
                         <Button Tag="7" Click="Navigate_Click" Style="{StaticResource NavButton}">
                             <StackPanel Orientation="Horizontal"><TextBlock Text="%" Foreground="#0F9F78" Width="24"/><TextBlock Text="Promotions &amp; VAT"/></StackPanel>
@@ -405,12 +411,21 @@
                             <StackPanel Orientation="Horizontal"><TextBlock Text="♙" Foreground="#0F9F78" Width="24"/><TextBlock Text="Customers"/></StackPanel>
                         </Button>
                         <Button Tag="5" Click="Navigate_Click" Style="{StaticResource NavButton}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="♧" Foreground="#0F9F78" Width="24"/><TextBlock Text="Suppliers &amp; purchasing"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="♧" Foreground="#0F9F78" Width="24"/><TextBlock Text="Purchase management"/></StackPanel>
+                        </Button>
+                        <Button Tag="15" Click="Navigate_Click" Style="{StaticResource NavButton}">
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="⇄" Foreground="#0F9F78" Width="24"/><TextBlock Text="Customer &amp; supplier ledgers"/></StackPanel>
                         </Button>
 
                         <TextBlock Text="FINANCE" Style="{StaticResource NavSection}"/>
                         <Button Tag="8" Click="Navigate_Click" Style="{StaticResource NavButton}">
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="£" Foreground="#0F9F78" Width="24"/><TextBlock Text="Till &amp; reconciliation"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="£" Foreground="#0F9F78" Width="24"/><TextBlock Text="Till reconciliation"/></StackPanel>
+                        </Button>
+                        <Button Tag="14" Click="Navigate_Click" Style="{StaticResource NavButton}">
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="−" Foreground="#0F9F78" Width="24"/><TextBlock Text="Expense management"/></StackPanel>
+                        </Button>
+                        <Button Tag="16" Click="Navigate_Click" Style="{StaticResource NavButton}">
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="◷" Foreground="#0F9F78" Width="24"/><TextBlock Text="Shift management"/></StackPanel>
                         </Button>
                         <Button Tag="9" Click="Navigate_Click" Style="{StaticResource NavButton}">
                             <StackPanel Orientation="Horizontal"><TextBlock Text="▤" Foreground="#0F9F78" Width="24"/><TextBlock Text="Reports &amp; export"/></StackPanel>
@@ -463,7 +478,7 @@
                                     <StackPanel><TextBlock Text="OPERATIONS CONTROL ROOM" Foreground="#5CDBB0" FontSize="10" FontWeight="Bold"/><TextBlock x:Name="BusinessTypeText" Text="Retail" Foreground="#F8FAFC" FontSize="24" FontWeight="SemiBold" Margin="0,4,0,2"/><TextBlock Text="Live local-first activity map" Foreground="#B4C0CE" FontSize="12"/></StackPanel>
                                     <StackPanel Grid.Column="1"><TextBlock Text="SYNC" Foreground="#5CDBB0" FontSize="10" FontWeight="Bold"/><TextBlock x:Name="SyncStatusText" Text="Offline" Foreground="#F8FAFC" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel>
                                     <StackPanel Grid.Column="2"><TextBlock Text="ALERTS" Foreground="#5CDBB0" FontSize="10" FontWeight="Bold"/><TextBlock x:Name="NotificationStatusText" Text="No local notifications" Foreground="#F8FAFC" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel>
-                                    <StackPanel Grid.Column="3" HorizontalAlignment="Right"><TextBlock Text="SEGMENTED WORKFLOWS" Foreground="#5CDBB0" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/><TextBlock Text="Sales • Stock • Customers • Suppliers • Till" Foreground="#F8FAFC" TextWrapping="Wrap" HorizontalAlignment="Right" TextAlignment="Right" Margin="0,7,0,0"/></StackPanel>
+                                    <StackPanel Grid.Column="3" HorizontalAlignment="Right"><TextBlock Text="SEGMENTED WORKFLOWS" Foreground="#5CDBB0" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/><TextBlock Text="Sales • Price check • Stock • Purchases • Ledgers • Expenses • Shifts" Foreground="#F8FAFC" TextWrapping="Wrap" HorizontalAlignment="Right" TextAlignment="Right" Margin="0,7,0,0"/></StackPanel>
                                 </Grid>
                             </Border>
                             <UniformGrid Grid.Row="1" Rows="1" Columns="5" Margin="0,0,0,16">
@@ -615,14 +630,15 @@
                                             </StackPanel>
                                             <StackPanel Grid.Row="2" Margin="0,2,4,0">
                                                 <TextBlock Text="Payment type" Foreground="#333333" FontSize="10" FontWeight="SemiBold"/>
-                                                <ComboBox x:Name="PaymentCombo" SelectedIndex="0" Height="30" Background="#FFFFFF" Foreground="#222222">
+                                                <ComboBox x:Name="PaymentCombo" SelectedIndex="0" Height="30" Background="#FFFFFF" Foreground="#222222" SelectionChanged="PaymentCombo_SelectionChanged">
                                                     <ComboBoxItem Content="Cash"/><ComboBoxItem Content="Loyalty points"/><ComboBoxItem Content="Gift card"/>
                                                     <ComboBoxItem Content="On account"/><ComboBoxItem Content="Store credit"/>
                                                     <ComboBoxItem Content="Bank transfer"/><ComboBoxItem Content="Split payment"/>
+                                                    <ComboBoxItem Content="Card"/>
                                                 </ComboBox>
                                             </StackPanel>
                                             <StackPanel Grid.Row="2" Grid.Column="1" Margin="2,2">
-                                                <TextBlock Text="Paid amount" Foreground="#333333" FontSize="10" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="PaymentAmountLabel" Text="Paid amount" Foreground="#333333" FontSize="10" FontWeight="SemiBold"/>
                                                 <TextBox x:Name="TenderedBox" Text="0" Height="30" Background="#C7F4C4" Foreground="#222222" TextChanged="TenderedBox_TextChanged"/>
                                             </StackPanel>
                                             <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Margin="4,2,0,0">
@@ -734,23 +750,41 @@
                             </Border>
                         </Grid>
                     </TabItem>
-                    <TabItem Header="Products &amp; Stock">
+                    <TabItem Header="Product Management">
                         <Grid Margin="10,14,10,10"><Grid.ColumnDefinitions><ColumnDefinition Width="1.25*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <GroupBox Header="Inventory" Grid.Column="0" Margin="0,0,12,0"><DataGrid x:Name="InventoryGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="InventoryGrid_SelectionChanged"><DataGrid.Columns><DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="120"/><DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120"/><DataGridTextColumn Header="Unit" Binding="{Binding UnitLabel}" Width="90"/><DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat={}{0:C}}" Width="90"/><DataGridTextColumn Header="Stock" Binding="{Binding StockQuantity}" Width="70"/><DataGridTextColumn Header="Reorder" Binding="{Binding ReorderLevel}" Width="70"/></DataGrid.Columns></DataGrid></GroupBox>
                             <GroupBox Header="Product details" Grid.Column="1"><StackPanel><TextBlock Text="SKU" Style="{StaticResource FieldLabel}"/><TextBox x:Name="SkuBox" Margin="0,0,0,10"/><TextBlock Text="Barcode" Style="{StaticResource FieldLabel}"/><TextBox x:Name="BarcodeProductBox" Margin="0,0,0,10"/><TextBlock Text="Name" Style="{StaticResource FieldLabel}"/><TextBox x:Name="NameBox" Margin="0,0,0,10"/><TextBlock Text="Category" Style="{StaticResource FieldLabel}"/><TextBox x:Name="CategoryBox" Margin="0,0,0,10"/><TextBlock Text="Unit of measure" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="UnitCombo" Margin="0,0,0,10"/><TextBlock Text="Display unit label (for example LPG kg)" Style="{StaticResource FieldLabel}"/><TextBox x:Name="UnitLabelBox" Margin="0,0,0,10"/><TextBlock Text="Price" Style="{StaticResource FieldLabel}"/><TextBox x:Name="PriceBox" Margin="0,0,0,10"/><TextBlock Text="Stock quantity (supports decimals / kg)" Style="{StaticResource FieldLabel}"/><TextBox x:Name="StockBox" Margin="0,0,0,10"/><TextBlock Text="Reorder level" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ReorderBox" Margin="0,0,0,14"/><StackPanel Orientation="Horizontal"><Button Content="New" Click="NewProduct_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Save product" Click="SaveProduct_Click" Style="{StaticResource PrimaryButton}"/></StackPanel></StackPanel></GroupBox>
                         </Grid>
                     </TabItem>
-                    <TabItem Header="Sales History"><DataGrid x:Name="SalesHistoryGrid" AutoGenerateColumns="False" IsReadOnly="True" Margin="10,14"><DataGrid.Columns><DataGridTextColumn Header="Receipt" Binding="{Binding ReceiptNumber}" Width="170"/><DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/><DataGridTextColumn Header="Items" Binding="{Binding ItemCount}" Width="90"/><DataGridTextColumn Header="Payment" Binding="{Binding PaymentMethod}" Width="110"/><DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat={}{0:C}}" Width="120"/></DataGrid.Columns></DataGrid></TabItem>
+                    <TabItem Header="Sales Management">
+                        <Grid Margin="12,14">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="Find receipts by receipt number or payment type" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="SalesHistorySearchBox" Width="300" DockPanel.Dock="Right" ToolTip="Search receipts" TextChanged="SalesHistorySearchBox_TextChanged"/>
+                            </DockPanel>
+                            <DataGrid x:Name="SalesHistoryGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Receipt" Binding="{Binding ReceiptNumber}" Width="170"/>
+                                    <DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/>
+                                    <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*"/>
+                                    <DataGridTextColumn Header="Items" Binding="{Binding ItemCount}" Width="90"/>
+                                    <DataGridTextColumn Header="Payment" Binding="{Binding PaymentMethod}" Width="110"/>
+                                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat={}{0:C}}" Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
                     <TabItem Header="Customers">
                         <Grid Margin="10,14,10,10"><Grid.ColumnDefinitions><ColumnDefinition Width="1.2*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><DataGrid x:Name="CustomersGrid" Grid.Column="0" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,12,0" SelectionChanged="CustomersGrid_SelectionChanged"><DataGrid.Columns><DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="130"/><DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="180"/><DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="*"/></DataGrid.Columns></DataGrid><GroupBox Header="Customer record" Grid.Column="1"><StackPanel><TextBlock Text="Name" Style="{StaticResource FieldLabel}"/><TextBox x:Name="CustomerNameBox" Margin="0,0,0,10"/><TextBlock Text="Phone" Style="{StaticResource FieldLabel}"/><TextBox x:Name="CustomerPhoneBox" Margin="0,0,0,10"/><TextBlock Text="Email" Style="{StaticResource FieldLabel}"/><TextBox x:Name="CustomerEmailBox" Margin="0,0,0,10"/><TextBlock Text="Address" Style="{StaticResource FieldLabel}"/><TextBox x:Name="CustomerAddressBox" Margin="0,0,0,10"/><TextBlock Text="Notes" Style="{StaticResource FieldLabel}"/><TextBox x:Name="CustomerNotesBox" Height="60" TextWrapping="Wrap" VerticalContentAlignment="Top" Margin="0,0,0,14"/><StackPanel Orientation="Horizontal"><Button Content="New" Click="NewCustomer_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Save customer" Click="SaveCustomer_Click" Style="{StaticResource PrimaryButton}"/></StackPanel></StackPanel></GroupBox></Grid>
                     </TabItem>
-                    <TabItem Header="Suppliers &amp; Purchasing">
+                    <TabItem Header="Purchase Management">
                         <Grid Margin="10,14,10,10"><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions><GroupBox Header="Suppliers" Grid.Column="0" Margin="0,0,10,10"><DataGrid x:Name="SuppliersGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="SuppliersGrid_SelectionChanged"><DataGrid.Columns><DataGridTextColumn Header="Supplier" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="Contact" Binding="{Binding Contact}" Width="130"/><DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="120"/></DataGrid.Columns></DataGrid></GroupBox><GroupBox Header="Supplier details" Grid.Column="1" Margin="10,0,0,10"><StackPanel><TextBlock Text="Name" Style="{StaticResource FieldLabel}"/><TextBox x:Name="SupplierNameBox" Margin="0,0,0,8"/><TextBlock Text="Contact" Style="{StaticResource FieldLabel}"/><TextBox x:Name="SupplierContactBox" Margin="0,0,0,8"/><TextBlock Text="Phone / email" Style="{StaticResource FieldLabel}"/><TextBox x:Name="SupplierPhoneBox" Margin="0,0,0,8"/><TextBlock Text="Address" Style="{StaticResource FieldLabel}"/><TextBox x:Name="SupplierAddressBox" Margin="0,0,0,10"/><StackPanel Orientation="Horizontal"><Button Content="New" Click="NewSupplier_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Save supplier" Click="SaveSupplier_Click" Style="{StaticResource PrimaryButton}"/></StackPanel></StackPanel></GroupBox><GroupBox Header="Purchase order" Grid.Row="1" Grid.ColumnSpan="2"><StackPanel><StackPanel Orientation="Horizontal"><ComboBox x:Name="PurchaseSupplierCombo" DisplayMemberPath="Name" Width="180"/><ComboBox x:Name="PurchaseProductCombo" DisplayMemberPath="Name" Width="220" Margin="8,0,8,0"/><TextBox x:Name="PurchaseQtyBox" Text="1" Width="55" Margin="0,0,8,0"/><TextBox x:Name="PurchaseCostBox" Text="0" Width="75" Margin="0,0,8,0"/><Button Content="Add line" Click="AddPurchaseLine_Click" Style="{StaticResource QuietButton}"/><Button Content="Receive order" Click="ReceivePurchase_Click" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"/></StackPanel><DataGrid x:Name="PurchaseOrdersGrid" AutoGenerateColumns="False" IsReadOnly="True" Height="115" Margin="0,10,0,0"><DataGrid.Columns><DataGridTextColumn Header="Order" Binding="{Binding Number}" Width="150"/><DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/><DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy}}" Width="120"/><DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat={}{0:C}}" Width="100"/></DataGrid.Columns></DataGrid></StackPanel></GroupBox></Grid>
                     </TabItem>
-                    <TabItem Header="Returns &amp; Refunds"><Grid Margin="10,14"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><GroupBox Header="Process a return"><StackPanel Orientation="Horizontal"><TextBox x:Name="ReturnReceiptBox" Width="210" ToolTip="Receipt number"/><TextBox x:Name="ReturnReasonBox" Width="260" Margin="8,0,8,0" ToolTip="Reason"/><Button Content="Refund receipt" Click="RefundReceipt_Click"/></StackPanel></GroupBox><DataGrid x:Name="ReturnsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,14,0,0"><DataGrid.Columns><DataGridTextColumn Header="Receipt" Binding="{Binding ReceiptNumber}" Width="180"/><DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/><DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*"/><DataGridTextColumn Header="Refund" Binding="{Binding Amount, StringFormat={}{0:C}}" Width="110"/></DataGrid.Columns></DataGrid></Grid></TabItem>
+                    <TabItem Header="Returns &amp; Refunds"><Grid Margin="10,14"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><GroupBox Header="Process a return"><StackPanel Orientation="Horizontal"><TextBox x:Name="ReturnReceiptBox" Width="210" ToolTip="Receipt number"/><TextBox x:Name="ReturnReasonBox" Width="260" Margin="8,0,8,0" ToolTip="Reason"/><Button Content="Refund receipt" Click="RefundReceipt_Click"/></StackPanel></GroupBox><DataGrid x:Name="ReturnsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,14,0,0"><DataGrid.Columns><DataGridTextColumn Header="Receipt" Binding="{Binding ReceiptNumber}" Width="180"/><DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/><DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*"/><DataGridTextColumn Header="Refund" Binding="{Binding Amount, StringFormat={}{0:C}}" Width="110"/><DataGridTextColumn Header="Method" Binding="{Binding PaymentMethod}" Width="110"/></DataGrid.Columns></DataGrid></Grid></TabItem>
                     <TabItem Header="Promotions &amp; VAT"><Grid Margin="10,14"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions><GroupBox Header="Discount promotions" Grid.Column="0" Margin="0,0,10,0"><StackPanel><DataGrid x:Name="PromotionsGrid" AutoGenerateColumns="False" IsReadOnly="True" Height="260" SelectionChanged="PromotionsGrid_SelectionChanged"><DataGrid.Columns><DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="90"/><DataGridTextColumn Header="Discount" Binding="{Binding DiscountPercent, StringFormat={}{0:0.##}%}" Width="90"/><DataGridCheckBoxColumn Header="Active" Binding="{Binding Active}" Width="60"/></DataGrid.Columns></DataGrid><TextBox x:Name="PromotionNameBox" Margin="0,10,0,6" ToolTip="Promotion name"/><StackPanel Orientation="Horizontal"><TextBox x:Name="PromotionCodeBox" Width="100" ToolTip="Code"/><TextBox x:Name="PromotionPercentBox" Width="80" Margin="6,0,6,0" ToolTip="Percent"/><Button Content="Save promotion" Click="SavePromotion_Click"/></StackPanel></StackPanel></GroupBox><GroupBox Header="VAT / tax configuration" Grid.Column="1" Margin="10,0,0,0"><StackPanel><TextBlock Text="Tax name" Style="{StaticResource FieldLabel}"/><TextBox x:Name="TaxNameBox" Margin="0,0,0,12"/><TextBlock Text="Rate (%)" Style="{StaticResource FieldLabel}"/><TextBox x:Name="TaxRateBox" Margin="0,0,0,12"/><CheckBox x:Name="TaxInclusiveBox" Content="Prices include VAT" Margin="0,0,0,16"/><Button Content="Save tax settings" Click="SaveTax_Click" Style="{StaticResource PrimaryButton}"/></StackPanel></GroupBox></Grid></TabItem>
-                    <TabItem Header="Till &amp; Reconciliation"><Grid Margin="10,14"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><GroupBox Header="Cash drawer"><StackPanel Orientation="Horizontal"><TextBlock Text="Opening float" VerticalAlignment="Center" Style="{StaticResource FieldLabel}"/><TextBox x:Name="OpeningFloatBox" Text="0" Width="90" Margin="8,0,14,0"/><Button Content="Open till" Click="OpenTill_Click"/><TextBlock Text="Counted cash" VerticalAlignment="Center" Style="{StaticResource FieldLabel}" Margin="20,0,0,0"/><TextBox x:Name="CountedCashBox" Text="0" Width="90" Margin="8,0,14,0"/><Button Content="Close &amp; reconcile" Click="CloseTill_Click"/></StackPanel></GroupBox><DataGrid x:Name="TillGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,14,0,0"><DataGrid.Columns><DataGridTextColumn Header="Opened" Binding="{Binding OpenedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/><DataGridTextColumn Header="Closed" Binding="{Binding ClosedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/><DataGridTextColumn Header="Opening" Binding="{Binding OpeningFloat, StringFormat={}{0:C}}" Width="110"/><DataGridTextColumn Header="Expected" Binding="{Binding ExpectedCash, StringFormat={}{0:C}}" Width="110"/><DataGridTextColumn Header="Counted" Binding="{Binding CountedCash, StringFormat={}{0:C}}" Width="110"/><DataGridTextColumn Header="Variance" Binding="{Binding Variance, StringFormat={}{0:C}}" Width="110"/></DataGrid.Columns></DataGrid></Grid></TabItem>
-                    <TabItem Header="Reports &amp; Export"><StackPanel Margin="10,18"><TextBlock Text="Daily / weekly / monthly owner reports" Style="{StaticResource PageTitle}" FontSize="20"/><TextBlock Text="Reports are generated locally first and are ready for Google Drive / Google Sheets export when configured." Style="{StaticResource SectionCaption}" Margin="0,6,0,0"/><TextBlock x:Name="ReportSummaryText" Margin="0,10,0,20" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal"><ComboBox x:Name="ReportPeriodCombo" Width="120" SelectedIndex="0" Margin="0,0,8,0"><ComboBoxItem Content="Daily"/><ComboBoxItem Content="Weekly"/><ComboBoxItem Content="Monthly"/></ComboBox><Button Content="Refresh report" Click="RefreshReport_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Export period CSV" Click="ExportPeriodCsv_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Export sales CSV" Click="ExportSalesCsv_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Export inventory CSV" Click="ExportInventoryCsv_Click" Style="{StaticResource QuietButton}"/></StackPanel></StackPanel></TabItem>
+                    <TabItem Header="Till &amp; Reconciliation"><Grid Margin="10,14"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><GroupBox Header="Cash drawer"><StackPanel Orientation="Horizontal"><TextBlock Text="Opening float" VerticalAlignment="Center" Style="{StaticResource FieldLabel}"/><TextBox x:Name="OpeningFloatBox" Text="0" Width="90" Margin="8,0,14,0"/><Button Content="Open till" Click="OpenTill_Click"/><TextBlock Text="Counted cash" VerticalAlignment="Center" Style="{StaticResource FieldLabel}" Margin="20,0,0,0"/><TextBox x:Name="CountedCashBox" Text="0" Width="90" Margin="8,0,14,0"/><Button Content="Close &amp; reconcile" Click="CloseTill_Click"/></StackPanel></GroupBox><DataGrid x:Name="TillGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,14,0,0"><DataGrid.Columns><DataGridTextColumn Header="Opened" Binding="{Binding OpenedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/><DataGridTextColumn Header="Cashier" Binding="{Binding OpenedBy}" Width="130"/><DataGridTextColumn Header="Closed" Binding="{Binding ClosedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="180"/><DataGridTextColumn Header="Closed by" Binding="{Binding ClosedBy}" Width="130"/><DataGridTextColumn Header="Opening" Binding="{Binding OpeningFloat, StringFormat={}{0:C}}" Width="110"/><DataGridTextColumn Header="Expected" Binding="{Binding ExpectedCash, StringFormat={}{0:C}}" Width="110"/><DataGridTextColumn Header="Counted" Binding="{Binding CountedCash, StringFormat={}{0:C}}" Width="110"/><DataGridTextColumn Header="Variance" Binding="{Binding Variance, StringFormat={}{0:C}}" Width="110"/></DataGrid.Columns></DataGrid></Grid></TabItem>
+                    <TabItem Header="Reports &amp; Export"><StackPanel Margin="10,18"><TextBlock Text="Daily / weekly / monthly owner reports" Style="{StaticResource PageTitle}" FontSize="20"/><TextBlock Text="Reports are generated locally first and are ready for Google Drive / Google Sheets export when configured." Style="{StaticResource SectionCaption}" Margin="0,6,0,0"/><TextBlock x:Name="ReportSummaryText" Margin="0,10,0,20" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal"><ComboBox x:Name="ReportPeriodCombo" Width="120" SelectedIndex="0" Margin="0,0,8,0" SelectionChanged="ReportPeriodCombo_SelectionChanged"><ComboBoxItem Content="Daily"/><ComboBoxItem Content="Weekly"/><ComboBoxItem Content="Monthly"/></ComboBox><Button Content="Refresh report" Click="RefreshReport_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Export period CSV" Click="ExportPeriodCsv_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Export sales CSV" Click="ExportSalesCsv_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Export inventory CSV" Click="ExportInventoryCsv_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Export expenses CSV" Click="ExportExpensesCsv_Click" Style="{StaticResource QuietButton}"/></StackPanel></StackPanel></TabItem>
                     <TabItem Header="Settings &amp; Users">
                         <Grid Margin="16,14">
                             <Grid.RowDefinitions>
@@ -975,6 +1009,181 @@
                         </Grid>
                     </TabItem>
                     <TabItem Header="Database Tools"><StackPanel Margin="10,18"><TextBlock Text="Migration and import tools" Style="{StaticResource PageTitle}" FontSize="20"/><TextBlock Text="The local JSON file is automatically versioned. Export a complete copy before moving to another machine, or import a previously exported copy." TextWrapping="Wrap" Margin="0,8,0,20" Foreground="{StaticResource MutedBrush}"/><StackPanel Orientation="Horizontal"><Button Content="Export JSON" Click="ExportJson_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/><Button Content="Import JSON" Click="ImportJson_Click"/><TextBlock x:Name="DatabaseStatusText" Margin="14,8,0,0" Foreground="{StaticResource MutedBrush}"/></StackPanel></StackPanel></TabItem>
+                    <TabItem Header="Price Checker">
+                        <Grid Margin="20">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Fast product price lookup" Style="{StaticResource PageTitle}" FontSize="22"/>
+                                <TextBlock Text="Scan a barcode or search by product name and SKU to confirm the shelf price and live availability." Style="{StaticResource SectionCaption}" Margin="0,5,0,16"/>
+                                <DockPanel>
+                                    <Button Content="Clear" DockPanel.Dock="Right" Click="ClearPriceLookup_Click" Style="{StaticResource QuietButton}" Margin="10,0,0,0"/>
+                                    <TextBox x:Name="PriceLookupBox" Height="42" FontSize="16" ToolTip="Scan barcode or type a product name / SKU"
+                                             TextChanged="PriceLookupBox_TextChanged" KeyDown="PriceLookupBox_KeyDown"/>
+                                </DockPanel>
+                            </StackPanel>
+                            <Border Grid.Row="1" Background="#F3FAF7" BorderBrush="#D7EEE4" BorderThickness="1" CornerRadius="12" Margin="0,20,0,0" Padding="28">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="PRODUCT RESULT" Foreground="{StaticResource AccentBrush}" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock x:Name="PriceLookupResultText" Text="Scan a barcode or search by product name or SKU."
+                                               Foreground="{StaticResource InkBrush}" FontSize="25" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,8"/>
+                                    <TextBlock x:Name="PriceLookupStockText" Foreground="{StaticResource MutedBrush}" FontSize="17" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Inventory Management">
+                        <Grid Margin="12,14">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="145"/></Grid.RowDefinitions>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock x:Name="InventoryManagementCountText" DockPanel.Dock="Right" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox x:Name="InventorySearchBox" Width="260" ToolTip="Search product, SKU, barcode or category"
+                                             TextChanged="InventorySearchBox_TextChanged"/>
+                                    <ComboBox x:Name="InventoryFilterCombo" Width="155" SelectedIndex="0" Margin="8,0,0,0"
+                                              SelectionChanged="InventoryFilterCombo_SelectionChanged">
+                                        <ComboBoxItem Content="All stock"/><ComboBoxItem Content="Reorder needed"/><ComboBoxItem Content="Out of stock"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </DockPanel>
+                            <DataGrid x:Name="InventoryManagementGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="110"/>
+                                    <DataGridTextColumn Header="Product" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="130"/>
+                                    <DataGridTextColumn Header="Barcode" Binding="{Binding Barcode}" Width="140"/>
+                                    <DataGridTextColumn Header="On hand" Binding="{Binding StockQuantity}" Width="90"/>
+                                    <DataGridTextColumn Header="Reorder at" Binding="{Binding ReorderLevel}" Width="95"/>
+                                    <DataGridTextColumn Header="Unit price" Binding="{Binding Price, StringFormat={}{0:C}}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <DockPanel Grid.Row="2" Margin="0,10,0,8">
+                                <Button x:Name="AdjustInventoryButton" Content="Record stock adjustment" DockPanel.Dock="Right" Click="AdjustInventory_Click" Style="{StaticResource PrimaryButton}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox x:Name="InventoryAdjustmentQuantityBox" Width="120" ToolTip="Quantity change (use negative to remove stock)"/>
+                                    <TextBox x:Name="InventoryAdjustmentReasonBox" Width="300" Margin="8,0,0,0" ToolTip="Reason for stock adjustment"/>
+                                </StackPanel>
+                            </DockPanel>
+                            <GroupBox Grid.Row="3" Header="Recent stock movements">
+                                <DataGrid x:Name="InventoryAdjustmentsGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="155"/>
+                                        <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*"/>
+                                        <DataGridTextColumn Header="Change" Binding="{Binding QuantityChange}" Width="85"/>
+                                        <DataGridTextColumn Header="Balance" Binding="{Binding QuantityAfter}" Width="85"/>
+                                        <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*"/>
+                                        <DataGridTextColumn Header="Recorded by" Binding="{Binding RecordedBy}" Width="120"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </GroupBox>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Expense Management">
+                        <Grid Margin="14">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="1.45*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <GroupBox Header="Recorded expenses" Grid.Column="0" Margin="0,0,12,0">
+                                <DataGrid x:Name="ExpensesGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="145"/>
+                                        <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120"/>
+                                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                        <DataGridTextColumn Header="Payment" Binding="{Binding PaymentMethod}" Width="95"/>
+                                        <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:C}}" Width="105"/>
+                                        <DataGridTextColumn Header="Recorded by" Binding="{Binding RecordedBy}" Width="115"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </GroupBox>
+                            <GroupBox Header="Record an expense" Grid.Column="1" Margin="12,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Category" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ExpenseCategoryBox" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Description" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ExpenseDescriptionBox" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Amount" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ExpenseAmountBox" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Payment method" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox x:Name="ExpensePaymentCombo" SelectedIndex="0" Margin="0,0,0,10">
+                                        <ComboBoxItem Content="Cash"/><ComboBoxItem Content="Bank transfer"/><ComboBoxItem Content="Card"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Reference (optional)" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ExpenseReferenceBox" Margin="0,0,0,16"/>
+                                    <Button x:Name="SaveExpenseButton" Content="Save expense" Click="SaveExpense_Click" Style="{StaticResource PrimaryButton}"/>
+                                </StackPanel>
+                            </GroupBox>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Customer &amp; Supplier Ledgers">
+                        <Grid Margin="14">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <DockPanel Margin="0,0,0,12">
+                                <Border DockPanel.Dock="Right" Background="#F3FAF7" CornerRadius="8" Padding="14,8">
+                                    <StackPanel><TextBlock x:Name="LedgerBalanceCaptionText" Text="Outstanding balance" Foreground="{StaticResource MutedBrush}" FontSize="10"/>
+                                        <TextBlock x:Name="LedgerBalanceText" Text="£0.00" Foreground="{StaticResource InkBrush}" FontSize="20" FontWeight="SemiBold"/></StackPanel>
+                                </Border>
+                                <StackPanel Orientation="Horizontal">
+                                    <ComboBox x:Name="LedgerPartyTypeCombo" Width="130" SelectedIndex="0" SelectionChanged="LedgerPartyTypeCombo_SelectionChanged">
+                                        <ComboBoxItem Content="Customer"/><ComboBoxItem Content="Supplier"/>
+                                    </ComboBox>
+                                    <ComboBox x:Name="LedgerPartyCombo" Width="260" Margin="8,0,0,0" SelectionChanged="LedgerPartyCombo_SelectionChanged"/>
+                                </StackPanel>
+                            </DockPanel>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="1.5*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <DataGrid x:Name="LedgerEntriesGrid" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,12,0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="145"/>
+                                        <DataGridTextColumn Header="Entry" Binding="{Binding Entry}" Width="145"/>
+                                        <DataGridTextColumn Header="Reference" Binding="{Binding Reference}" Width="*"/>
+                                        <DataGridTextColumn Header="Debit" Binding="{Binding Debit, StringFormat={}{0:C}}" Width="100"/>
+                                        <DataGridTextColumn Header="Credit" Binding="{Binding Credit, StringFormat={}{0:C}}" Width="100"/>
+                                        <DataGridTextColumn Header="Balance" Binding="{Binding Balance, StringFormat={}{0:C}}" Width="110"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <GroupBox Grid.Column="1" Header="Record settlement" Margin="12,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Amount received / paid" Style="{StaticResource FieldLabel}"/><TextBox x:Name="LedgerPaymentAmountBox" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Method" Style="{StaticResource FieldLabel}"/>
+                                        <ComboBox x:Name="LedgerPaymentMethodCombo" SelectedIndex="0" Margin="0,0,0,10">
+                                            <ComboBoxItem Content="Cash"/><ComboBoxItem Content="Bank transfer"/><ComboBoxItem Content="Card"/>
+                                        </ComboBox>
+                                        <TextBlock Text="Reference (optional)" Style="{StaticResource FieldLabel}"/><TextBox x:Name="LedgerPaymentReferenceBox" Margin="0,0,0,16"/>
+                                        <Button x:Name="RecordLedgerPaymentButton" Content="Save settlement" Click="RecordLedgerPayment_Click" Style="{StaticResource PrimaryButton}"/>
+                                        <TextBlock Text="Customer receipts reduce receivables; supplier payments reduce payables."
+                                                   Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                                    </StackPanel>
+                                </GroupBox>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Shift Management">
+                        <Grid Margin="14">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Background="#F3FAF7" BorderBrush="#D7EEE4" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="CURRENT SHIFT" Foreground="{StaticResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock x:Name="CurrentShiftText" Text="No shift is currently open." Foreground="{StaticResource InkBrush}" FontSize="19" FontWeight="SemiBold" Margin="0,5,0,2"/>
+                                    <TextBlock x:Name="CurrentShiftSalesText" Text="Open a till to begin tracking a cashier shift." Foreground="{StaticResource MutedBrush}"/>
+                                </StackPanel>
+                            </Border>
+                            <GroupBox Grid.Row="1" Header="Shift controls" Margin="0,0,0,12">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Opening float" VerticalAlignment="Center" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox x:Name="ShiftOpeningFloatBox" Text="0" Width="90" Margin="8,0,12,0"/>
+                                    <Button Content="Open shift" Click="OpenShift_Click" Style="{StaticResource PrimaryButton}"/>
+                                    <TextBlock Text="Counted cash" VerticalAlignment="Center" Style="{StaticResource FieldLabel}" Margin="20,0,0,0"/>
+                                    <TextBox x:Name="ShiftCountedCashBox" Text="0" Width="90" Margin="8,0,12,0"/>
+                                    <Button Content="Close shift" Click="CloseShift_Click" Style="{StaticResource QuietButton}"/>
+                                </StackPanel>
+                            </GroupBox>
+                            <DataGrid x:Name="ShiftTillGrid" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Opened" Binding="{Binding OpenedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="160"/>
+                                    <DataGridTextColumn Header="Cashier" Binding="{Binding OpenedBy}" Width="130"/>
+                                    <DataGridTextColumn Header="Closed" Binding="{Binding ClosedAt, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="160"/>
+                                    <DataGridTextColumn Header="Closed by" Binding="{Binding ClosedBy}" Width="130"/>
+                                    <DataGridTextColumn Header="Opening" Binding="{Binding OpeningFloat, StringFormat={}{0:C}}" Width="110"/>
+                                    <DataGridTextColumn Header="Expected" Binding="{Binding ExpectedCash, StringFormat={}{0:C}}" Width="110"/>
+                                    <DataGridTextColumn Header="Counted" Binding="{Binding CountedCash, StringFormat={}{0:C}}" Width="110"/>
+                                    <DataGridTextColumn Header="Variance" Binding="{Binding Variance, StringFormat={}{0:C}}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
                 </TabControl>
             </Border>
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,8,0,0">

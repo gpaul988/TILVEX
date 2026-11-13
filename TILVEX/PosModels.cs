@@ -68,6 +68,7 @@ public sealed class Sale
     public string ReceiptNumber { get; set; } = "";
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public Guid? CustomerId { get; set; }
+    public string CustomerName { get; set; } = "";
     public List<SaleLine> Lines { get; set; } = [];
     public decimal Discount { get; set; }
     public decimal TaxRate { get; set; }
@@ -124,6 +125,7 @@ public sealed class PurchaseOrder
     public string Number { get; set; } = "";
     public Guid? SupplierId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime? ReceivedAt { get; set; }
     public string Status { get; set; } = "Draft";
     public List<PurchaseOrderLine> Lines { get; set; } = [];
     [JsonIgnore] public decimal Total => Lines.Sum(l => l.UnitCost * l.Quantity);
@@ -145,6 +147,7 @@ public sealed class ReturnRecord
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public string Reason { get; set; } = "";
     public decimal Amount { get; set; }
+    public string PaymentMethod { get; set; } = "Cash";
 }
 
 public sealed class Promotion
@@ -169,11 +172,49 @@ public sealed class TillSession
     public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime OpenedAt { get; set; } = DateTime.Now;
     public DateTime? ClosedAt { get; set; }
+    public string OpenedBy { get; set; } = "";
+    public string ClosedBy { get; set; } = "";
     public decimal OpeningFloat { get; set; }
     public decimal ExpectedCash { get; set; }
     public decimal CountedCash { get; set; }
     public string Notes { get; set; } = "";
     [JsonIgnore] public decimal Variance => CountedCash - ExpectedCash;
+}
+
+public sealed class OperatingExpense
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public string Category { get; set; } = "";
+    public string Description { get; set; } = "";
+    public decimal Amount { get; set; }
+    public string PaymentMethod { get; set; } = "Cash";
+    public string Reference { get; set; } = "";
+    public string RecordedBy { get; set; } = "";
+}
+
+public sealed class LedgerTransaction
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public string PartyType { get; set; } = "Customer";
+    public Guid PartyId { get; set; }
+    public decimal Amount { get; set; }
+    public string PaymentMethod { get; set; } = "Cash";
+    public string Reference { get; set; } = "";
+    public string RecordedBy { get; set; } = "";
+}
+
+public sealed class StockAdjustment
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = "";
+    public decimal QuantityChange { get; set; }
+    public decimal QuantityAfter { get; set; }
+    public string Reason { get; set; } = "";
+    public string RecordedBy { get; set; } = "";
 }
 
 public sealed class UserAccount
@@ -265,7 +306,7 @@ public sealed class WorkflowScreen
 
 public sealed class PosData
 {
-    public int SchemaVersion { get; set; } = 4;
+    public int SchemaVersion { get; set; } = 5;
     public List<Product> Products { get; set; } = [];
     public List<Sale> Sales { get; set; } = [];
     public List<Customer> Customers { get; set; } = [];
@@ -275,6 +316,9 @@ public sealed class PosData
     public List<Promotion> Promotions { get; set; } = [];
     public TaxConfig Tax { get; set; } = new();
     public List<TillSession> TillSessions { get; set; } = [];
+    public List<OperatingExpense> Expenses { get; set; } = [];
+    public List<LedgerTransaction> LedgerTransactions { get; set; } = [];
+    public List<StockAdjustment> StockAdjustments { get; set; } = [];
     public List<UserAccount> Users { get; set; } = [];
     public BusinessSettings Settings { get; set; } = new();
     public List<WorkflowScreen> Workflows { get; set; } = [];
