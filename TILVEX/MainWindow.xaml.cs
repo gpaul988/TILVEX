@@ -55,6 +55,22 @@ public partial class MainWindow : Window
         if (sender is not Button button || !int.TryParse(button.Tag?.ToString(), out var tabIndex))
             return;
 
+        NavigateToTab(tabIndex);
+    }
+
+    private void NavigateMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem || !int.TryParse(menuItem.Tag?.ToString(), out var tabIndex))
+            return;
+
+        NavigateToTab(tabIndex);
+    }
+
+    private void NavigateToTab(int tabIndex)
+    {
+        if (tabIndex < 0 || tabIndex >= MainTabs.Items.Count)
+            return;
+
         MainTabs.SelectedIndex = tabIndex;
         MainPageTitle.Text = tabIndex switch
         {
