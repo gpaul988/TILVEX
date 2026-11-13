@@ -71,12 +71,13 @@
             <Setter Property="FontSize" Value="12"/>
         </Style>
         <Style x:Key="TopNavigationMenuItem" TargetType="{x:Type MenuItem}">
-            <Setter Property="Foreground" Value="#344256"/>
+            <Setter Property="Foreground" Value="#DCE8F5"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="14,10"/>
             <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type MenuItem}">
@@ -85,14 +86,14 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
-                                    <Path x:Name="SubmenuArrow" Grid.Column="1" Data="M 0 0 L 4 4 L 8 0 Z" Fill="#7A8798"
+                                    <Path x:Name="SubmenuArrow" Grid.Column="1" Data="M 0 0 L 4 4 L 8 0 Z" Fill="#73DCC0"
                                           Width="8" Height="4" Stretch="Fill" Margin="8,1,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                                 </Grid>
                             </Border>
                             <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False"
                                    IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
                                    Placement="Bottom" PopupAnimation="Fade">
-                                <Border Background="#FFFFFF" BorderBrush="#E3E9F0" BorderThickness="1" CornerRadius="8"
+                                <Border Background="#152438" BorderBrush="#36536B" BorderThickness="1" CornerRadius="8"
                                         Padding="5" Effect="{StaticResource CardShadow}">
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                                 </Border>
@@ -103,12 +104,12 @@
                                 <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Visible"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#EAF7F2"/>
-                                <Setter Property="Foreground" Value="#0B805E"/>
+                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#0F9F78"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsSubmenuOpen" Value="True">
-                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#EAF7F2"/>
-                                <Setter Property="Foreground" Value="#0B805E"/>
+                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#0F9F78"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                             <Trigger Property="Role" Value="SubmenuItem">
                                 <Setter Property="Padding" Value="11,8"/>
@@ -518,40 +519,40 @@
                     <Button Content="Backup data" Click="BackupData_Click" Style="{StaticResource QuietButton}" Padding="14,8"/>
                 </StackPanel>
             </Grid>
-            <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="9" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Padding="4" Margin="0,0,0,14">
-                <Menu x:Name="TopNavigationMenu" Background="Transparent" BorderThickness="0" Padding="4,0"
+            <Border Grid.Row="1" Background="#101B2B" CornerRadius="9" BorderBrush="#2C455E" BorderThickness="1" Padding="4,0" Margin="0,0,0,14">
+                <Menu x:Name="TopNavigationMenu" Background="Transparent" BorderThickness="0" Padding="5,2"
                       ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
-                    <MenuItem Header="Workspace">
+                    <MenuItem Header="Workspace" Tag="0" MouseDoubleClick="TopMenu_DoubleClick">
                         <MenuItem Header="Dashboard" Tag="0" Click="NavigateMenu_Click"/>
                         <MenuItem Header="New sale / checkout" Tag="1" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Sales &amp; Service">
+                    <MenuItem Header="Sales &amp; Service" Tag="1" MouseDoubleClick="TopMenu_DoubleClick">
                         <MenuItem Header="New sale / checkout" Tag="1" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Sales management" Tag="3" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Returns &amp; refunds" Tag="6" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Price checker" Tag="12" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Products &amp; Inventory">
+                    <MenuItem Header="Products &amp; Inventory" Tag="13" MouseDoubleClick="TopMenu_DoubleClick">
                         <MenuItem Header="Product management" Tag="2" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Inventory management" Tag="13" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Promotions &amp; VAT" Tag="7" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Purchasing">
+                    <MenuItem Header="Purchasing" Tag="5" MouseDoubleClick="TopMenu_DoubleClick">
                         <MenuItem Header="Purchase management" Tag="5" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Suppliers" Tag="5" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Finance">
+                    <MenuItem Header="Finance" Tag="14" MouseDoubleClick="TopMenu_DoubleClick">
                         <MenuItem Header="Expenses" Tag="14" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Customer &amp; supplier ledgers" Tag="15" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Till reconciliation" Tag="8" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Shift management" Tag="16" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Reports" Tag="9" Click="NavigateMenu_Click"/>
-                    <MenuItem Header="Customers">
+                    <MenuItem Header="Reports" Tag="9" Click="NavigateMenu_Click" MouseDoubleClick="TopMenu_DoubleClick"/>
+                    <MenuItem Header="Customers" Tag="4" MouseDoubleClick="TopMenu_DoubleClick">
                         <MenuItem Header="Customer records" Tag="4" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Customer &amp; supplier ledgers" Tag="15" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Administration">
+                    <MenuItem Header="Administration" Tag="10" MouseDoubleClick="TopMenu_DoubleClick">
                         <MenuItem Header="Settings &amp; users" Tag="10" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Database tools" Tag="11" Click="NavigateMenu_Click"/>
                         <Separator/>

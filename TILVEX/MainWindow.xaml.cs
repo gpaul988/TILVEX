@@ -66,6 +66,15 @@ public partial class MainWindow : Window
         NavigateToTab(tabIndex);
     }
 
+    private void TopMenu_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not MenuItem menuItem || !int.TryParse(menuItem.Tag?.ToString(), out var tabIndex))
+            return;
+
+        NavigateToTab(tabIndex);
+        e.Handled = true;
+    }
+
     private void NavigateToTab(int tabIndex)
     {
         if (tabIndex < 0 || tabIndex >= MainTabs.Items.Count)
