@@ -522,37 +522,37 @@
             <Border Grid.Row="1" Background="#101B2B" CornerRadius="9" BorderBrush="#2C455E" BorderThickness="1" Padding="4,0" Margin="0,0,0,14">
                 <Menu x:Name="TopNavigationMenu" Background="Transparent" BorderThickness="0" Padding="5,2"
                       ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
-                    <MenuItem Header="Workspace" Tag="0" MouseDoubleClick="TopMenu_DoubleClick">
+                    <MenuItem Header="Workspace" Tag="0" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
                         <MenuItem Header="Dashboard" Tag="0" Click="NavigateMenu_Click"/>
                         <MenuItem Header="New sale / checkout" Tag="1" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Sales &amp; Service" Tag="1" MouseDoubleClick="TopMenu_DoubleClick">
+                    <MenuItem Header="Sales &amp; Service" Tag="1" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
                         <MenuItem Header="New sale / checkout" Tag="1" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Sales management" Tag="3" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Returns &amp; refunds" Tag="6" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Price checker" Tag="12" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Products &amp; Inventory" Tag="13" MouseDoubleClick="TopMenu_DoubleClick">
+                    <MenuItem Header="Products &amp; Inventory" Tag="13" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
                         <MenuItem Header="Product management" Tag="2" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Inventory management" Tag="13" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Promotions &amp; VAT" Tag="7" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Purchasing" Tag="5" MouseDoubleClick="TopMenu_DoubleClick">
+                    <MenuItem Header="Purchasing" Tag="5" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
                         <MenuItem Header="Purchase management" Tag="5" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Suppliers" Tag="5" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Finance" Tag="14" MouseDoubleClick="TopMenu_DoubleClick">
+                    <MenuItem Header="Finance" Tag="14" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
                         <MenuItem Header="Expenses" Tag="14" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Customer &amp; supplier ledgers" Tag="15" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Till reconciliation" Tag="8" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Shift management" Tag="16" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Reports" Tag="9" Click="NavigateMenu_Click" MouseDoubleClick="TopMenu_DoubleClick"/>
-                    <MenuItem Header="Customers" Tag="4" MouseDoubleClick="TopMenu_DoubleClick">
+                    <MenuItem Header="Reports" Tag="9" Click="NavigateMenu_Click"/>
+                    <MenuItem Header="Customers" Tag="4" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
                         <MenuItem Header="Customer records" Tag="4" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Customer &amp; supplier ledgers" Tag="15" Click="NavigateMenu_Click"/>
                     </MenuItem>
-                    <MenuItem Header="Administration" Tag="10" MouseDoubleClick="TopMenu_DoubleClick">
+                    <MenuItem Header="Administration" Tag="10" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
                         <MenuItem Header="Settings &amp; users" Tag="10" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Database tools" Tag="11" Click="NavigateMenu_Click"/>
                         <Separator/>

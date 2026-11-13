@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,10 +28,14 @@ public partial class MainWindow : Window
     private Supplier? _selectedSupplier;
     private Promotion? _selectedPromotion;
     private PurchaseOrder? _draftPurchase;
+    private MenuItem? _lastTopMenuItem;
+    private long _lastTopMenuClickAt;
+    private Point _lastTopMenuClickPosition;
 
     public MainWindow()
     {
         InitializeComponent();
+        AttachMenuItemHandlers(TopNavigationMenu.Items);
         OperatorText.Text = $"Good morning, {AppSession.CurrentUser?.UserName ?? "operator"}";
         MainTabs.SelectedIndex = 1;
         MainPageTitle.Text = "Point of sale";
@@ -50,6 +55,16 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e) => RefreshDashboardCharts();
 
+    private void AttachMenuItemHandlers(ItemCollection items)
+    {
+        foreach (var menuItem in items.OfType<MenuItem>())
+        {
+            menuItem.AddHandler(UIElement.PreviewMouseLeftButtonDownEvent,
+                new MouseButtonEventHandler(TopMenuItem_PreviewMouseLeftButtonDown), true);
+            AttachMenuItemHandlers(menuItem.Items);
+        }
+    }
+
     private void Navigate_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button button || !int.TryParse(button.Tag?.ToString(), out var tabIndex))
@@ -66,13 +81,60 @@ public partial class MainWindow : Window
         NavigateToTab(tabIndex);
     }
 
-    private void TopMenu_DoubleClick(object sender, MouseButtonEventArgs e)
+    private void TopMenuItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not MenuItem menuItem || !int.TryParse(menuItem.Tag?.ToString(), out var tabIndex))
+        if (sender is not MenuItem menuItem || !ReferenceEquals(FindMenuItem(e.OriginalSource as DependencyObject), menuItem))
             return;
 
-        NavigateToTab(tabIndex);
+        var now = Environment.TickCount64;
+        var position = e.GetPosition(menuItem);
+        var dpi = VisualTreeHelper.GetDpi(menuItem);
+        var isDoubleClick = ReferenceEquals(menuItem, _lastTopMenuItem) &&
+                            now - _lastTopMenuClickAt <= GetDoubleClickTime() &&
+                            Math.Abs(position.X - _lastTopMenuClickPosition.X) <= GetSystemMetrics(36) / dpi.DpiScaleX / 2 &&
+                            Math.Abs(position.Y - _lastTopMenuClickPosition.Y) <= GetSystemMetrics(37) / dpi.DpiScaleY / 2;
+        _lastTopMenuItem = menuItem;
+        _lastTopMenuClickAt = now;
+        _lastTopMenuClickPosition = position;
+        if (!isDoubleClick || !TryNavigateMenuItem(menuItem))
+            return;
+
+        _lastTopMenuItem = null;
         e.Handled = true;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern uint GetDoubleClickTime();
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int index);
+
+    private static MenuItem? FindMenuItem(DependencyObject? element)
+    {
+        while (element is not null)
+        {
+            if (element is MenuItem menuItem)
+                return menuItem;
+
+            element = element switch
+            {
+                Visual visual => VisualTreeHelper.GetParent(visual),
+                FrameworkContentElement content => content.Parent,
+                _ => LogicalTreeHelper.GetParent(element)
+            };
+        }
+
+        return null;
+    }
+
+    private bool TryNavigateMenuItem(MenuItem menuItem)
+    {
+        if (!int.TryParse(menuItem.Tag?.ToString(), out var tabIndex) ||
+            tabIndex < 0 || tabIndex >= MainTabs.Items.Count)
+            return false;
+
+        NavigateToTab(tabIndex);
+        return true;
     }
 
     private void NavigateToTab(int tabIndex)
