@@ -99,10 +99,10 @@
           }
         }
       },
-      "Microsoft.Bcl.Cryptography/10.0.0": {
+      "Microsoft.Bcl.Cryptography/10.0.13": {
         "type": "package",
         "dependencies": {
-          "System.Formats.Asn1": "10.0.0"
+          "System.Formats.Asn1": "10.0.13"
         },
         "compile": {
           "lib/net8.0/Microsoft.Bcl.Cryptography.dll": {
@@ -164,7 +164,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "System.Formats.Asn1/10.0.0": {
+      "System.Formats.Asn1/10.0.13": {
         "type": "package",
         "compile": {
           "lib/net8.0/System.Formats.Asn1.dll": {
@@ -205,11 +205,11 @@
           }
         }
       },
-      "System.Security.Cryptography.Pkcs/10.0.0": {
+      "System.Security.Cryptography.Pkcs/10.0.13": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Bcl.Cryptography": "10.0.0",
-          "System.Formats.Asn1": "10.0.0"
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
         },
         "compile": {
           "lib/net8.0/System.Security.Cryptography.Pkcs.dll": {
@@ -398,10 +398,10 @@
         "mailkit.nuspec"
       ]
     },
-    "Microsoft.Bcl.Cryptography/10.0.0": {
-      "sha512": "2iilO1H+fkDBOsfYbFO57N1ElPsbWxNXyAekEtZ7b0sPrfm1akvLj+Wr7DzZy0fcEGUrez2jSyqAn4sTxDsgbg==",
+    "Microsoft.Bcl.Cryptography/10.0.13": {
+      "sha512": "6H3QqvjxTgCt4gxVVCJVjo35Zh/gzjw7NXidIx0ghZrgYYMUja/7JJ4g39ynE/OH5YBBbUhlmirGR/AuYpNIuA==",
       "type": "package",
-      "path": "microsoft.bcl.cryptography/10.0.0",
+      "path": "microsoft.bcl.cryptography/10.0.13",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -424,7 +424,7 @@
         "lib/netstandard2.0/Microsoft.Bcl.Cryptography.xml",
         "lib/netstandard2.1/Microsoft.Bcl.Cryptography.dll",
         "lib/netstandard2.1/Microsoft.Bcl.Cryptography.xml",
-        "microsoft.bcl.cryptography.10.0.0.nupkg.sha512",
+        "microsoft.bcl.cryptography.10.0.13.nupkg.sha512",
         "microsoft.bcl.cryptography.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -524,10 +524,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Formats.Asn1/10.0.0": {
-      "sha512": "0QCZNYeRswlUVyo9N3hXrt5X9dqqRup53loU4K4JatdoYPhXHLrK9PwRtg5vP0Sr9QbdCOKk2luEdip/kV5Sig==",
+    "System.Formats.Asn1/10.0.13": {
+      "sha512": "uwKFGyJaUQ8xsf+wddv512+UIU1O4reOveom3y0gpQr86P1ReAKcQa/UdOZtg1etTIHgb01/grXp00tgeGBxqA==",
       "type": "package",
-      "path": "system.formats.asn1/10.0.0",
+      "path": "system.formats.asn1/10.0.13",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -548,7 +548,7 @@
         "lib/net9.0/System.Formats.Asn1.xml",
         "lib/netstandard2.0/System.Formats.Asn1.dll",
         "lib/netstandard2.0/System.Formats.Asn1.xml",
-        "system.formats.asn1.10.0.0.nupkg.sha512",
+        "system.formats.asn1.10.0.13.nupkg.sha512",
         "system.formats.asn1.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -581,10 +581,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Security.Cryptography.Pkcs/10.0.0": {
-      "sha512": "UPWqLSygJlFerRi9XNIuM0a1VC8gHUIufyP24xQ0sc+XimqUAEcjpOz9DhKpyDjH+5B/wO3RpC0KpkEeDj/ddg==",
+    "System.Security.Cryptography.Pkcs/10.0.13": {
+      "sha512": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
       "type": "package",
-      "path": "system.security.cryptography.pkcs/10.0.0",
+      "path": "system.security.cryptography.pkcs/10.0.13",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -612,7 +612,7 @@
         "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.xml",
         "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.dll",
         "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.xml",
-        "system.security.cryptography.pkcs.10.0.0.nupkg.sha512",
+        "system.security.cryptography.pkcs.10.0.13.nupkg.sha512",
         "system.security.cryptography.pkcs.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -659,6 +659,7 @@
       "Google.Apis.Auth >= 1.78.0",
       "Google.Apis.Sheets.v4 >= 1.78.0.4309",
       "MailKit >= 4.18.1",
+      "System.Security.Cryptography.Pkcs >= 10.0.13",
       "System.Security.Cryptography.ProtectedData >= 8.0.0"
     ]
   },
@@ -726,6 +727,10 @@
           "MailKit": {
             "target": "Package",
             "version": "[4.18.1, )"
+          },
+          "System.Security.Cryptography.Pkcs": {
+            "target": "Package",
+            "version": "[10.0.13, )"
           },
           "System.Security.Cryptography.ProtectedData": {
             "target": "Package",
