@@ -89,6 +89,44 @@ public partial class MainWindow : Window
         NavigateToTab(tabIndex);
     }
 
+    private void NavigateToolbar_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || !int.TryParse(button.Tag?.ToString(), out var tabIndex))
+            return;
+
+        NavigateToTab(tabIndex);
+    }
+
+    private void ToggleSidebar_Click(object sender, RoutedEventArgs e)
+    {
+        var isCollapsed = SidebarColumn.Width.Value == 0;
+        SidebarColumn.Width = new GridLength(isCollapsed ? 238 : 0);
+        MainSidebarPanel.Visibility = isCollapsed ? Visibility.Visible : Visibility.Collapsed;
+        SidebarVisibilityMenuItem.Header = isCollapsed ? "Hide sidebar" : "Show sidebar";
+    }
+
+    private void ShowKeyboardHelp_Click(object sender, RoutedEventArgs e) =>
+        MessageBox.Show(
+            "Register shortcuts (while the sale screen is active):\n\n" +
+            "F1  Return to the business dashboard\n" +
+            "F2  Start a new sale\n" +
+            "F3  Remove selected item\n" +
+            "F4  Focus barcode scan\n" +
+            "F5  Select customer\n" +
+            "F6  Open returns and refunds\n" +
+            "F7  Open product management\n" +
+            "F8  Complete payment",
+            "Keyboard shortcuts",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+
+    private void ShowAbout_Click(object sender, RoutedEventArgs e) =>
+        MessageBox.Show(
+            $"TILVEX POS\n{_store.Data.Settings.BusinessName} · {BusinessTypeDesign.For(_store.Data.Settings.BusinessType).Name}\nLocal-first business workspace",
+            "About TILVEX POS",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+
     private void NavigateMenu_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not MenuItem menuItem || !int.TryParse(menuItem.Tag?.ToString(), out var tabIndex))
@@ -251,6 +289,7 @@ public partial class MainWindow : Window
         LowStockDetailText.Text = lowStock.Count == 0 ? "Stock levels healthy" : $"{lowStock.Count} items need attention";
         SyncStatusText.Text = $"{_store.Data.Settings.Integrations.SyncStatus}: {_store.Data.Settings.Integrations.LastSyncMessage}";
         NotificationStatusText.Text = _store.Data.Notifications.OrderByDescending(n => n.CreatedAt).FirstOrDefault()?.Message ?? "No local notifications";
+        UpdateHeaderConnectionStatus();
         var today = _store.Data.Sales.Where(s => s.CreatedAt.Date == DateTime.Today).ToList();
         TodaySalesText.Text = today.Sum(s => s.Total).ToString("C");
         TodayTransactionsText.Text = today.Count.ToString();
@@ -259,6 +298,23 @@ public partial class MainWindow : Window
         UpdateCartTotal();
         RefreshReport();
         RefreshDashboardCharts();
+    }
+
+    private void UpdateHeaderConnectionStatus()
+    {
+        var integration = _store.Data.Settings.Integrations;
+        var pendingEvents = _store.Data.AuditEvents.Count(item => !item.SheetsSynced);
+        HeaderCloudStatusText.Text = !integration.GoogleSheetsConnected
+            ? "SHEETS OFF"
+            : pendingEvents > 0
+                ? $"SHEETS QUEUED · {pendingEvents}"
+                : "SHEETS ON";
+        HeaderCloudStatusText.Foreground = !integration.GoogleSheetsConnected
+            ? new SolidColorBrush(Color.FromRgb(203, 213, 225))
+            : pendingEvents > 0
+                ? new SolidColorBrush(Color.FromRgb(253, 230, 138))
+                : new SolidColorBrush(Color.FromRgb(167, 243, 208));
+        HeaderCloudStatusText.ToolTip = integration.LastSyncMessage;
     }
 
     private static Color ChartAccent = Color.FromRgb(0x0F, 0x9F, 0x78);
@@ -1718,6 +1774,7 @@ public partial class MainWindow : Window
         finally
         {
             _automationRunning = false;
+            UpdateHeaderConnectionStatus();
         }
     }
 
@@ -1886,6 +1943,7 @@ public partial class MainWindow : Window
         _store.Data.Settings.Integrations.LastSyncMessage = result.Message;
         _store.Data.Settings.Integrations.SyncStatus = result.Status;
         _store.Save();
+        UpdateHeaderConnectionStatus();
         SettingsStatusText.Text = result.Message;
         if (type.StartsWith("Google", StringComparison.Ordinal))
             GoogleConnectionStatusText.Text = result.Message;
