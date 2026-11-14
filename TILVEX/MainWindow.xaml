@@ -594,6 +594,7 @@
                     <MenuItem Header="Expenses" Tag="14" Click="NavigateMenu_Click"/>
                     <MenuItem Header="Reports" Tag="9" Click="NavigateMenu_Click"/>
                     <MenuItem Header="Tools" ItemContainerStyle="{StaticResource TopNavigationMenuItem}">
+                        <MenuItem Header="Barcode Studio" Click="OpenBarcodeStudio_Click"/>
                         <MenuItem Header="Promotions &amp; VAT" Tag="7" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Till reconciliation" Tag="8" Click="NavigateMenu_Click"/>
                         <MenuItem Header="Shift management" Tag="16" Click="NavigateMenu_Click"/>

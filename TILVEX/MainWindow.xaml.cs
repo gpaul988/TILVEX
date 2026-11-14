@@ -120,6 +120,13 @@ public partial class MainWindow : Window
             MessageBoxButton.OK,
             MessageBoxImage.Information);
 
+    private void OpenBarcodeStudio_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new BarcodeStudioWindow(_store) { Owner = this };
+        window.ShowDialog();
+        Refresh();
+    }
+
     private void ShowAbout_Click(object sender, RoutedEventArgs e) =>
         MessageBox.Show(
             $"TILVEX POS\n{_store.Data.Settings.BusinessName} · {BusinessTypeDesign.For(_store.Data.Settings.BusinessType).Name}\nLocal-first business workspace",

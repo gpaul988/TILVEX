@@ -65,6 +65,10 @@
               "target": "Package",
               "version": "[4.18.1, )"
             },
+            "PDFsharp": {
+              "target": "Package",
+              "version": "[6.2.2, )"
+            },
             "System.Security.Cryptography.Pkcs": {
               "target": "Package",
               "version": "[10.0.13, )"
@@ -72,6 +76,10 @@
             "System.Security.Cryptography.ProtectedData": {
               "target": "Package",
               "version": "[8.0.0, )"
+            },
+            "ZXing.Net": {
+              "target": "Package",
+              "version": "[0.16.11, )"
             }
           },
           "imports": [
