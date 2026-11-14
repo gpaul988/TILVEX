@@ -213,6 +213,7 @@ public partial class MainWindow : Window
 
     private void Refresh()
     {
+        ApplyBusinessTypeDesign();
         var products = _store.Data.Products.OrderBy(p => p.Name).ToList();
         ProductCategoryCombo.ItemsSource = new[] { "All categories" }
             .Concat(products.Select(product => product.Category)
@@ -248,7 +249,6 @@ public partial class MainWindow : Window
         var lowStock = products.Where(IsLowStock).ToList();
         LowStockText.Text = lowStock.Count.ToString();
         LowStockDetailText.Text = lowStock.Count == 0 ? "Stock levels healthy" : $"{lowStock.Count} items need attention";
-        BusinessTypeText.Text = _store.Data.Settings.BusinessType.ToString();
         SyncStatusText.Text = $"{_store.Data.Settings.Integrations.SyncStatus}: {_store.Data.Settings.Integrations.LastSyncMessage}";
         NotificationStatusText.Text = _store.Data.Notifications.OrderByDescending(n => n.CreatedAt).FirstOrDefault()?.Message ?? "No local notifications";
         var today = _store.Data.Sales.Where(s => s.CreatedAt.Date == DateTime.Today).ToList();
@@ -261,11 +261,73 @@ public partial class MainWindow : Window
         RefreshDashboardCharts();
     }
 
-    private static readonly Color ChartAccent = Color.FromRgb(0x0F, 0x9F, 0x78);
-    private static readonly Color ChartAccentDark = Color.FromRgb(0x0B, 0x80, 0x5E);
+    private static Color ChartAccent = Color.FromRgb(0x0F, 0x9F, 0x78);
+    private static Color ChartAccentDark = Color.FromRgb(0x0B, 0x80, 0x5E);
     private static readonly Color ChartInk = Color.FromRgb(0x17, 0x23, 0x34);
     private static readonly Color ChartMuted = Color.FromRgb(0x6B, 0x77, 0x8A);
     private static readonly Color ChartLine = Color.FromRgb(0xE3, 0xE9, 0xF0);
+
+    private void ApplyBusinessTypeDesign()
+    {
+        var design = BusinessTypeDesign.For(_store.Data.Settings.BusinessType);
+        var accentColor = (Color)ColorConverter.ConvertFromString(design.Accent);
+        var deepBrush = DesignBrush(design.Deep);
+        var accentBrush = new SolidColorBrush(accentColor);
+        var surfaceBrush = DesignBrush(design.Surface);
+
+        Resources["AccentBrush"] = accentBrush;
+        Resources["SuccessBrush"] = accentBrush;
+        Resources["NavyLightBrush"] = deepBrush;
+        Background = surfaceBrush;
+        Title = $"{_store.Data.Settings.BusinessName} — {design.Name} | TILVEX POS";
+        BusinessHeroBorder.Background = deepBrush;
+        BusinessGlyphBorder.Background = accentBrush;
+        BusinessFocusGlyphBorder.Background = accentBrush;
+        BusinessFocusPanel.Background = surfaceBrush;
+        BusinessFocusPanel.BorderBrush = accentBrush;
+        BusinessTypeGlyphText.Text = design.Glyph;
+        BusinessFocusGlyphText.Text = design.Glyph;
+        BusinessTypeText.Text = design.Name;
+        BusinessTypeEyebrowText.Text = design.HeroEyebrow;
+        BusinessTypeEyebrowText.Foreground = new SolidColorBrush(Blend(accentColor, Colors.White, 0.42));
+        BusinessTypeDescriptionText.Text = design.HeroCopy;
+        BusinessProfileSummaryText.Text = design.Description;
+        BusinessFocusTitleText.Text = design.FocusTitle;
+        BusinessFocusCopyText.Text = design.FocusCopy;
+        SalesMetricLabel.Text = design.SalesMetric;
+        TodaySalesText.Foreground = accentBrush;
+        TransactionMetricLabel.Text = design.TransactionMetric;
+        CatalogMetricLabel.Text = design.CatalogMetric;
+        StockMetricLabel.Text = design.StockMetric;
+        RevenueChartGroup.Header = design.RevenueChart;
+        CatalogChartGroup.Header = design.CatalogChart;
+        BusinessPrimaryActionButton.Content = design.PrimaryAction;
+        BusinessPrimaryActionButton.Tag = design.PrimaryTab;
+        BusinessPrimaryActionButton.Background = accentBrush;
+        BusinessPrimaryActionButton.BorderBrush = accentBrush;
+        BusinessSecondaryActionButton.Content = design.SecondaryAction;
+        BusinessSecondaryActionButton.Tag = design.SecondaryTab;
+        BusinessSecondaryActionButton.Background = surfaceBrush;
+        BusinessSecondaryActionButton.Foreground = deepBrush;
+        BusinessSecondaryActionButton.BorderBrush = accentBrush;
+        ChartAccent = accentColor;
+        ChartAccentDark = Blend(accentColor, Color.FromRgb(0x12, 0x18, 0x25), 0.35);
+    }
+
+    private static SolidColorBrush DesignBrush(string color) =>
+        new((Color)ColorConverter.ConvertFromString(color));
+
+    private static Color Blend(Color color, Color background, double amount) =>
+        Color.FromRgb(
+            (byte)(color.R * (1 - amount) + background.R * amount),
+            (byte)(color.G * (1 - amount) + background.G * amount),
+            (byte)(color.B * (1 - amount) + background.B * amount));
+
+    private void BusinessDesignAction_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && int.TryParse(button.Tag?.ToString(), out var tabIndex))
+            NavigateToTab(tabIndex);
+    }
 
     private void RefreshDashboardCharts()
     {
@@ -1455,22 +1517,8 @@ public partial class MainWindow : Window
         Language = XmlLanguage.GetLanguage(culture.Name);
     }
 
-    private static string BusinessTypeDisplayName(BusinessType type) => type switch
-    {
-        BusinessType.Retail => "General retail",
-        BusinessType.BeautySalon => "Beauty & salon",
-        BusinessType.Boutique => "Fashion & apparel",
-        BusinessType.Electrical => "Electrical",
-        BusinessType.ComputerRepair => "Computer services",
-        BusinessType.Electronics => "Electronics",
-        BusinessType.Pharmacy => "Pharmacy",
-        BusinessType.GasPetrolStation => "Fuel & gas",
-        BusinessType.Grocery => "Grocery",
-        BusinessType.Hospitality => "Cafe & hospitality",
-        BusinessType.Service => "Services",
-        BusinessType.Fuel => "Fuel services",
-        _ => "Other business"
-    };
+    private static string BusinessTypeDisplayName(BusinessType type) =>
+        BusinessTypeDesign.For(type).Name;
 
     private void CancelSettings_Click(object sender, RoutedEventArgs e)
     {

@@ -37,8 +37,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                <Setter TargetName="CardBorder" Property="Background" Value="#F2FBF7"/>
+                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                <Setter TargetName="CardBorder" Property="Background" Value="#F8FAFC"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="CardBorder" Property="Opacity" Value="0.8"/>
@@ -49,7 +49,7 @@
             </Setter>
         </Style>
         <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#0F9F78"/>
+            <Setter Property="Background" Value="{DynamicResource Accent}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="22,12"/>
@@ -75,7 +75,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="38" Height="38" CornerRadius="10" Background="{StaticResource Accent}">
+                    <Border Width="38" Height="38" CornerRadius="10" Background="{DynamicResource Accent}">
                         <TextBlock Text="T" Foreground="White" FontSize="21" FontWeight="Bold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
@@ -92,7 +92,7 @@
             <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1"
                     CornerRadius="12" Padding="16,12" VerticalAlignment="Top">
                 <StackPanel>
-                    <TextBlock x:Name="StepCounterText" Text="STEP 1 OF 2" Foreground="{StaticResource Accent}"
+                    <TextBlock x:Name="StepCounterText" Text="STEP 1 OF 2" Foreground="{DynamicResource Accent}"
                                FontSize="10" FontWeight="Bold"/>
                     <TextBlock x:Name="StepTitleText" Text="Business type" Foreground="{StaticResource Ink}"
                                FontWeight="SemiBold" Margin="0,4,0,0"/>
@@ -121,7 +121,7 @@
                                    Text="We’ll configure useful defaults while keeping every option editable."
                                    Foreground="{StaticResource Muted}" Margin="0,5,0,0"/>
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Text="1  ━━━━━━━━━━━  2" Foreground="{StaticResource Accent}"
+                    <TextBlock Grid.Column="1" Text="1  ━━━━━━━━━━━  2" Foreground="{DynamicResource Accent}"
                                FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                 </Grid>
 
@@ -187,7 +187,7 @@
                     </ScrollViewer>
                     <Border Grid.Column="1" Background="#F4F8FB" CornerRadius="14" Padding="20">
                         <StackPanel>
-                            <TextBlock Text="YOUR REGISTER, YOUR RULES" Foreground="{StaticResource Accent}"
+                            <TextBlock Text="YOUR REGISTER, YOUR RULES" Foreground="{DynamicResource Accent}"
                                        FontSize="10" FontWeight="Bold"/>
                             <TextBlock Text="A better first day starts with the right details."
                                        Foreground="{StaticResource Ink}" FontSize="20" FontWeight="SemiBold"

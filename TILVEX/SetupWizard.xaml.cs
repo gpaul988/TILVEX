@@ -27,23 +27,6 @@ public partial class SetupWizard : Window
         ("Canadian Dollar", "C$")
     ];
 
-    private static readonly (BusinessType Type, string Name, string Icon, string Description)[] BusinessTypes =
-    [
-        (BusinessType.Retail, "General retail", "▦", "Everyday products and sales"),
-        (BusinessType.Grocery, "Grocery", "▤", "Food, drinks and essentials"),
-        (BusinessType.Boutique, "Fashion & apparel", "◇", "Clothing, footwear and accessories"),
-        (BusinessType.Pharmacy, "Pharmacy", "+", "Health and personal care"),
-        (BusinessType.Electronics, "Electronics", "⌘", "Devices and accessories"),
-        (BusinessType.Electrical, "Electrical", "ϟ", "Electrical goods and supplies"),
-        (BusinessType.GasPetrolStation, "Fuel & gas", "◉", "Fuel, LPG and forecourt sales"),
-        (BusinessType.Fuel, "Fuel services", "⛽", "Fuel products and services"),
-        (BusinessType.Hospitality, "Cafe & hospitality", "◒", "Food service and hospitality"),
-        (BusinessType.BeautySalon, "Beauty & salon", "✦", "Appointments and retail"),
-        (BusinessType.ComputerRepair, "Computer services", "⌘", "Repairs and technical services"),
-        (BusinessType.Service, "Services", "◌", "Service-based business"),
-        (BusinessType.Other, "Other business", "✚", "A flexible point of sale")
-    ];
-
     public SetupWizard(PosStore store)
     {
         InitializeComponent();
@@ -70,8 +53,9 @@ public partial class SetupWizard : Window
 
     private void BuildBusinessTypeCards()
     {
-        foreach (var (type, name, icon, description) in BusinessTypes)
+        foreach (var design in BusinessTypeDesign.All)
         {
+            var type = design.Type;
             var button = new Button
             {
                 Tag = type,
@@ -80,20 +64,20 @@ public partial class SetupWizard : Window
                 MinHeight = 112,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch
             };
-            AutomationProperties.SetName(button, name);
+            AutomationProperties.SetName(button, design.Name);
             button.Click += BusinessType_Click;
 
             var content = new StackPanel();
             content.Children.Add(new TextBlock
             {
-                Text = icon,
-                Foreground = new SolidColorBrush(Color.FromRgb(15, 159, 120)),
-                FontSize = 23,
+                Text = design.Glyph,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(design.Accent)),
+                FontSize = 25,
                 FontWeight = FontWeights.SemiBold
             });
             content.Children.Add(new TextBlock
             {
-                Text = name,
+                Text = design.Name,
                 Foreground = new SolidColorBrush(Color.FromRgb(23, 35, 52)),
                 FontSize = 13,
                 FontWeight = FontWeights.SemiBold,
@@ -101,7 +85,7 @@ public partial class SetupWizard : Window
             });
             content.Children.Add(new TextBlock
             {
-                Text = description,
+                Text = design.Description,
                 Foreground = new SolidColorBrush(Color.FromRgb(104, 119, 139)),
                 FontSize = 10,
                 TextWrapping = TextWrapping.Wrap
@@ -126,15 +110,18 @@ public partial class SetupWizard : Window
 
     private void UpdateBusinessTypeSelection()
     {
+        var selectedDesign = BusinessTypeDesign.For(_selectedType);
+        Resources["Accent"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(selectedDesign.Accent));
         foreach (var (type, button) in _typeButtons)
         {
+            var design = BusinessTypeDesign.For(type);
             var selected = type == _selectedType;
             button.BorderBrush = new SolidColorBrush(selected
-                ? Color.FromRgb(15, 159, 120)
+                ? (Color)ColorConverter.ConvertFromString(design.Accent)
                 : Color.FromRgb(225, 232, 240));
             button.BorderThickness = new Thickness(selected ? 2 : 1);
             button.Background = new SolidColorBrush(selected
-                ? Color.FromRgb(242, 251, 247)
+                ? (Color)ColorConverter.ConvertFromString(design.Surface)
                 : Colors.White);
         }
     }
@@ -259,7 +246,7 @@ public partial class SetupWizard : Window
     }
 
     private static string BusinessTypeLabel(BusinessType type) =>
-        BusinessTypes.First(option => option.Type == type).Name;
+        BusinessTypeDesign.For(type).Name;
 
     private void Exit_Click(object sender, RoutedEventArgs e) => DialogResult = false;
 }
