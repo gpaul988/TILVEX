@@ -231,6 +231,7 @@ public sealed class BusinessSettings
 {
     public string BusinessName { get; set; } = "TILVEX";
     public string Email { get; set; } = "";
+    public string OwnerEmail { get; set; } = "";
     public string Address { get; set; } = "";
     public string City { get; set; } = "";
     public string Country { get; set; } = "";
@@ -245,6 +246,7 @@ public sealed class BusinessSettings
     public string LowStockOwnerEmail { get; set; } = "";
     public bool EnableSaleNotifications { get; set; } = true;
     public bool EnableOwnerEmailAlerts { get; set; } = false;
+    public bool SaleEmailAlerts { get; set; } = true;
     public NotificationSettings Notifications { get; set; } = new();
     public ReportSettings Reports { get; set; } = new();
     public IntegrationSettings Integrations { get; set; } = new();
@@ -266,6 +268,11 @@ public sealed class ReportSettings
     public bool Weekly { get; set; } = true;
     public bool Monthly { get; set; } = true;
     public string OwnerEmail { get; set; } = "";
+    public string SendTime { get; set; } = "20:00";
+    public string TimeZone { get; set; } = TimeZoneInfo.Local.Id;
+    public string? LastDailyPeriodSent { get; set; }
+    public string? LastWeeklyPeriodSent { get; set; }
+    public string? LastMonthlyPeriodSent { get; set; }
 }
 
 public sealed class IntegrationSettings
@@ -273,10 +280,17 @@ public sealed class IntegrationSettings
     public bool OnlineSyncEnabled { get; set; }
     public string SyncEndpoint { get; set; } = "";
     public string ProfileSyncEndpoint { get; set; } = "http://localhost:3000";
+    [JsonIgnore]
     public string SyncApiKey { get; set; } = "";
     public string GoogleDriveFolderId { get; set; } = "";
     public string GoogleSheetsSpreadsheetId { get; set; } = "";
-    public string GoogleSheetsWorksheet { get; set; } = "Sales";
+    public string GoogleSheetsWorksheet { get; set; } = "Activity";
+    public string GoogleOAuthClientId { get; set; } = "";
+    public bool GoogleSheetsConnected { get; set; }
+    public string SmtpHost { get; set; } = "";
+    public int SmtpPort { get; set; } = 587;
+    public string SmtpUser { get; set; } = "";
+    public bool SmtpUseTls { get; set; } = true;
     public string WhatsAppWebhookUrl { get; set; } = "";
     public string SmsWebhookUrl { get; set; } = "";
     public string EmailWebhookUrl { get; set; } = "";
@@ -285,6 +299,30 @@ public sealed class IntegrationSettings
     public IntegrationConnectionStatus SyncStatus { get; set; } = IntegrationConnectionStatus.Offline;
     public DateTime? LastSyncAt { get; set; }
     public string LastSyncMessage { get; set; } = "Local-only mode; no online integration configured.";
+}
+
+public sealed class AuditEvent
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public string Actor { get; set; } = "";
+    public string Type { get; set; } = "";
+    public string Summary { get; set; } = "";
+    public string Details { get; set; } = "";
+    public bool SheetsSynced { get; set; }
+}
+
+public sealed class EmailOutboxMessage
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public string Type { get; set; } = "";
+    public string Subject { get; set; } = "";
+    public string Body { get; set; } = "";
+    public bool Delivered { get; set; }
+    public DateTime? LastAttemptAt { get; set; }
+    public int Attempts { get; set; }
+    public string LastError { get; set; } = "";
 }
 
 public sealed class NotificationRecord
@@ -306,7 +344,7 @@ public sealed class WorkflowScreen
 
 public sealed class PosData
 {
-    public int SchemaVersion { get; set; } = 5;
+    public int SchemaVersion { get; set; } = 6;
     public List<Product> Products { get; set; } = [];
     public List<Sale> Sales { get; set; } = [];
     public List<Customer> Customers { get; set; } = [];
@@ -323,4 +361,6 @@ public sealed class PosData
     public BusinessSettings Settings { get; set; } = new();
     public List<WorkflowScreen> Workflows { get; set; } = [];
     public List<NotificationRecord> Notifications { get; set; } = [];
+    public List<AuditEvent> AuditEvents { get; set; } = [];
+    public List<EmailOutboxMessage> EmailOutbox { get; set; } = [];
 }

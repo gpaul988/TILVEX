@@ -51,7 +51,9 @@ public partial class SetupWizard : Window
         var settings = _store.Data.Settings;
         _selectedType = settings.BusinessType;
         BusinessNameBox.Text = settings.BusinessName == "TILVEX" ? "" : settings.BusinessName;
-        BusinessEmailBox.Text = settings.Email;
+        BusinessEmailBox.Text = string.IsNullOrWhiteSpace(settings.Email)
+            ? AppSession.CurrentUser?.Email ?? ""
+            : settings.Email;
         BusinessPhoneBox.Text = settings.Phone;
         BusinessAddressBox.Text = settings.Address;
         BusinessCityBox.Text = settings.City;
@@ -211,6 +213,21 @@ public partial class SetupWizard : Window
         var settings = _store.Data.Settings;
         settings.BusinessName = name;
         settings.Email = email;
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            settings.OwnerEmail = email;
+            settings.LowStockOwnerEmail = email;
+            settings.Reports.OwnerEmail = email;
+        }
+        else if (string.IsNullOrWhiteSpace(settings.OwnerEmail) &&
+                 !string.IsNullOrWhiteSpace(AppSession.CurrentUser?.Email) &&
+                 !AppSession.CurrentUser.Email.EndsWith("@tilvex.local", StringComparison.OrdinalIgnoreCase))
+        {
+            settings.OwnerEmail = AppSession.CurrentUser.Email;
+            settings.LowStockOwnerEmail = settings.OwnerEmail;
+            settings.Reports.OwnerEmail = settings.OwnerEmail;
+        }
+        settings.Reports.TimeZone = settings.TimeZone;
         settings.Phone = BusinessPhoneBox.Text.Trim();
         settings.Address = BusinessAddressBox.Text.Trim();
         settings.City = BusinessCityBox.Text.Trim();

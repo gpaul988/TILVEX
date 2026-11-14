@@ -62,6 +62,12 @@ public partial class AuthWindow : Window
             return;
         }
 
+        if (!System.Net.Mail.MailAddress.TryCreate(email, out _))
+        {
+            MessageBox.Show("Enter a valid email address.", "TILVEX", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         if (!password.Equals(confirmPassword, System.StringComparison.Ordinal))
         {
             MessageBox.Show("The passwords do not match.", "TILVEX", MessageBoxButton.OK, MessageBoxImage.Warning);

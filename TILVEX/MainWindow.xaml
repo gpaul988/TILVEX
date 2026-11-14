@@ -980,15 +980,28 @@
                                                     <TextBox x:Name="LowStockThresholdBox" Width="180" HorizontalAlignment="Left"/>
                                                     <TextBlock Text="Products also use their individual reorder level; the higher threshold triggers the warning."
                                                                Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,7,0,8"/>
-                                                    <TextBlock Text="Owner email for alerts" Style="{StaticResource FieldLabel}"/>
+                                                    <TextBlock Text="Owner email (set during first-run setup)" Style="{StaticResource FieldLabel}"/>
                                                     <TextBox x:Name="OwnerEmailBox" Width="340" HorizontalAlignment="Left"/>
                                                 </StackPanel>
                                             </GroupBox>
                                             <GroupBox Header="Notification preferences" Margin="0,12,0,0">
                                                 <StackPanel>
                                                     <CheckBox x:Name="SaleNotificationsBox" Content="Record sale activity in the local notification centre"/>
-                                                    <CheckBox x:Name="OwnerEmailAlertsBox" Content="Send low-stock email alerts using the configured email connection"/>
-                                                    <TextBlock Text="External notifications are not sent unless a connection is configured. Local sale records work offline."
+                                                    <CheckBox x:Name="SaleEmailAlertsBox" Content="Email the owner when each sale completes"/>
+                                                    <CheckBox x:Name="OwnerEmailAlertsBox" Content="Email the owner when products reach low stock"/>
+                                                    <TextBlock Text="Scheduled owner reports" Style="{StaticResource FieldLabel}" Margin="0,14,0,6"/>
+                                                    <WrapPanel>
+                                                        <CheckBox x:Name="DailyReportBox" Content="Daily" Margin="0,0,18,0"/>
+                                                        <CheckBox x:Name="WeeklyReportBox" Content="Weekly" Margin="0,0,18,0"/>
+                                                        <CheckBox x:Name="MonthlyReportBox" Content="Monthly"/>
+                                                    </WrapPanel>
+                                                    <WrapPanel Margin="0,8,0,0">
+                                                        <TextBlock Text="Send time (24-hour)" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                                        <TextBox x:Name="ReportSendTimeBox" Width="80" Margin="8,0,18,0" ToolTip="Local report time, HH:mm"/>
+                                                        <TextBlock Text="Time zone" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                                        <TextBox x:Name="ReportTimeZoneBox" Width="220" Margin="8,0,0,0" ToolTip="Windows time-zone ID"/>
+                                                    </WrapPanel>
+                                                    <TextBlock Text="Email reports summarize local sales, refunds, expenses and till variance. Offline periods are retried when the app is running."
                                                                Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                                                 </StackPanel>
                                             </GroupBox>
@@ -1009,10 +1022,39 @@
                                                     <PasswordBox x:Name="SyncApiKeyBox" MinHeight="34" Padding="9,7"/>
                                                 </StackPanel>
                                             </GroupBox>
+                                            <GroupBox Header="Owner email delivery (SMTP)" Margin="0,12,0,0">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
+                                                        <TextBlock Text="SMTP server" Style="{StaticResource FieldLabel}"/>
+                                                        <TextBox x:Name="SmtpHostBox"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
+                                                        <TextBlock Text="Port" Style="{StaticResource FieldLabel}"/>
+                                                        <TextBox x:Name="SmtpPortBox" Text="587"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,8">
+                                                        <TextBlock Text="SMTP username (optional)" Style="{StaticResource FieldLabel}"/>
+                                                        <TextBox x:Name="SmtpUserBox"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,8">
+                                                        <TextBlock Text="SMTP password (stored encrypted for this Windows user)" Style="{StaticResource FieldLabel}"/>
+                                                        <PasswordBox x:Name="SmtpPasswordBox" MinHeight="34" Padding="9,7"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2">
+                                                        <CheckBox x:Name="SmtpTlsBox" Content="Require TLS encryption" IsChecked="True"/>
+                                                        <WrapPanel Margin="0,8,0,0">
+                                                            <Button Content="Send test email" Click="TestSmtp_Click" Style="{StaticResource QuietButton}"/>
+                                                            <TextBlock x:Name="SmtpCredentialStatusText" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                                        </WrapPanel>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </GroupBox>
                                             <GroupBox Header="Cloud exports &amp; message providers" Margin="0,12,0,0">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
-                                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
                                                         <TextBlock Text="Google Drive folder ID" Style="{StaticResource FieldLabel}"/>
                                                         <TextBox x:Name="GoogleDriveFolderBox"/>
@@ -1022,25 +1064,44 @@
                                                         <TextBox x:Name="GoogleSheetsIdBox"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,8">
-                                                        <TextBlock Text="Worksheet name" Style="{StaticResource FieldLabel}"/>
-                                                        <TextBox x:Name="GoogleSheetsTabBox" Text="Sales"/>
+                                                        <TextBlock Text="Activity worksheet" Style="{StaticResource FieldLabel}"/>
+                                                        <TextBox x:Name="GoogleSheetsTabBox" Text="Activity"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,8">
+                                                        <TextBlock Text="Google OAuth desktop client ID" Style="{StaticResource FieldLabel}"/>
+                                                        <TextBox x:Name="GoogleOAuthClientIdBox"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,8">
+                                                        <TextBlock Text="Google OAuth client secret (DPAPI protected)" Style="{StaticResource FieldLabel}"/>
+                                                        <PasswordBox x:Name="GoogleOAuthClientSecretBox" MinHeight="34" Padding="9,7"/>
+                                                    </StackPanel>
+                                                    <WrapPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                                        <Button Content="Connect Google Sheets" Click="ConnectGoogleSheets_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/>
+                                                        <Button Content="Disconnect" Click="DisconnectGoogleSheets_Click" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/>
+                                                        <Button Content="Sync activity now" Click="SyncActivityNow_Click" Style="{StaticResource QuietButton}"/>
+                                                        <TextBlock x:Name="GoogleConnectionStatusText" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                                    </WrapPanel>
+                                                    <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,8,8">
                                                         <TextBlock Text="WhatsApp webhook URL" Style="{StaticResource FieldLabel}"/>
                                                         <TextBox x:Name="WhatsAppWebhookBox"/>
                                                     </StackPanel>
-                                                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,8">
+                                                    <StackPanel Grid.Row="4" Grid.Column="1" Margin="8,0,0,8">
                                                         <TextBlock Text="SMS webhook URL" Style="{StaticResource FieldLabel}"/>
                                                         <TextBox x:Name="SmsWebhookBox"/>
                                                     </StackPanel>
-                                                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2">
+                                                    <StackPanel Grid.Row="5" Grid.ColumnSpan="2">
                                                         <TextBlock Text="Email webhook URL" Style="{StaticResource FieldLabel}"/>
                                                         <TextBox x:Name="EmailWebhookBox"/>
                                                     </StackPanel>
+                                                    <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Margin="0,10,0,0"
+                                                               Text="Enable the Google Sheets API, create a Desktop OAuth client, then connect with the Google account that can edit this spreadsheet. Activity is queued locally until connected; password contents and credentials are never uploaded."
+                                                               Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
                                                 </Grid>
                                             </GroupBox>
-                                            <TextBlock Text="Connections are optional configuration hooks; no external provider is contacted until you configure and request a connection."
+                                            <TextBlock Text="SMTP delivery and Google Sheets OAuth are explicit connections. Google activity is queued locally and can be retried after reconnecting."
                                                        Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="2,10,2,0"/>
+                                            <TextBlock Text="Sheets activity includes sales, returns, purchases, inventory, expenses, ledgers, shifts, products, customers, users and business-setting changes. Navigation and credential contents are intentionally not logged."
+                                                       Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="2,6,2,0"/>
                                             <Button Content="Sync configured data now" Click="SyncNow_Click" Style="{StaticResource QuietButton}"
                                                     HorizontalAlignment="Left" Margin="0,10,0,0"/>
                                         </StackPanel>

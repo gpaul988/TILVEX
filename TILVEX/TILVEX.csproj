@@ -16,4 +16,11 @@
     <Resource Include="Assets\tilvex-icon.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Google.Apis.Auth" Version="1.78.0" />
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.78.0.4309" />
+    <PackageReference Include="MailKit" Version="4.18.1" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>

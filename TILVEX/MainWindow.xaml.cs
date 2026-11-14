@@ -11,6 +11,7 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Microsoft.Win32;
 
 namespace TILVEX;
@@ -22,6 +23,11 @@ public partial class MainWindow : Window
 
     private readonly PosStore _store = new();
     private IPosIntegrationService _integration = null!;
+    private OwnerAutomationService _automation = null!;
+    private readonly DispatcherTimer _automationTimer = new() { Interval = TimeSpan.FromMinutes(1) };
+    private readonly Dictionary<string, DateTime> _automationRetryAt = new();
+    private bool _automationRunning;
+    private bool _settingsSaveSucceeded;
     private readonly ObservableCollection<SaleLine> _cart = [];
     private Product? _selectedProduct;
     private Customer? _selectedCustomer;
@@ -46,14 +52,24 @@ public partial class MainWindow : Window
             .ToList();
         BusinessTypeCombo.DisplayMemberPath = nameof(BusinessTypeOption.DisplayName);
         BusinessTypeCombo.SelectedValuePath = nameof(BusinessTypeOption.Type);
+        _automation = new OwnerAutomationService(_store.Data);
         LoadSettings();
         ApplyCurrencyCulture();
         HeaderSubtitle.Text = "Scan items, build a receipt and take payment";
         _integration = new HttpIntegrationService(_store.Data.Settings.Integrations);
+        _automationTimer.Tick += async (_, _) => await RunAutomationsAsync();
+        _automationTimer.Start();
+        Loaded += async (_, _) => await RunAutomationsAsync();
         Refresh();
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e) => RefreshDashboardCharts();
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _automationTimer.Stop();
+        base.OnClosed(e);
+    }
 
     private void AttachMenuItemHandlers(ItemCollection items)
     {
@@ -637,6 +653,9 @@ public partial class MainWindow : Window
         CartGrid.Items.Refresh();
         Refresh();
         _ = NotifyLowStockAsync();
+        if (_store.Data.Settings.SaleEmailAlerts)
+            _ = SendOwnerNotificationAsync("Sale", $"Sale completed — {sale.ReceiptNumber}",
+                $"{_store.Data.Settings.BusinessName}\nReceipt: {sale.ReceiptNumber}\nTime: {sale.CreatedAt:g}\nItems: {sale.ItemCount}\nTotal: {sale.Total:C}\nPayment: {sale.PaymentMethod}");
         MessageBox.Show($"Receipt {sale.ReceiptNumber}\n\nTOTAL: {sale.Total:C}" +
                         (isOnAccount ? $"\nCharged to {customer!.Name}'s account." : $"\nChange: {sale.Change:C}"), "Sale completed");
         PrintSale(sale);
@@ -1275,33 +1294,75 @@ public partial class MainWindow : Window
         CompanyLogoBox.Text = settings.CompanyLogoPath;
         CurrencySymbolCombo.SelectedValue = settings.CurrencySymbol;
         LowStockThresholdBox.Text = settings.LowStockAlertThreshold.ToString("0.##");
-        OwnerEmailBox.Text = string.IsNullOrWhiteSpace(settings.LowStockOwnerEmail) ? settings.Reports.OwnerEmail : settings.LowStockOwnerEmail;
+        OwnerEmailBox.Text = settings.OwnerEmail;
         SaleNotificationsBox.IsChecked = settings.Notifications.SaleTimestampNotifications;
+        SaleEmailAlertsBox.IsChecked = settings.SaleEmailAlerts;
         OwnerEmailAlertsBox.IsChecked = settings.Notifications.LowStockOwnerEmailAlerts;
+        DailyReportBox.IsChecked = settings.Reports.Daily;
+        WeeklyReportBox.IsChecked = settings.Reports.Weekly;
+        MonthlyReportBox.IsChecked = settings.Reports.Monthly;
+        ReportSendTimeBox.Text = settings.Reports.SendTime;
+        ReportTimeZoneBox.Text = settings.Reports.TimeZone;
         SyncEnabledBox.IsChecked = settings.Integrations.OnlineSyncEnabled;
         SyncEndpointBox.Text = settings.Integrations.SyncEndpoint;
         SyncApiKeyBox.Password = settings.Integrations.SyncApiKey;
         GoogleDriveFolderBox.Text = settings.Integrations.GoogleDriveFolderId;
         GoogleSheetsIdBox.Text = settings.Integrations.GoogleSheetsSpreadsheetId;
         GoogleSheetsTabBox.Text = settings.Integrations.GoogleSheetsWorksheet;
+        GoogleOAuthClientIdBox.Text = settings.Integrations.GoogleOAuthClientId;
         WhatsAppWebhookBox.Text = settings.Integrations.WhatsAppWebhookUrl;
         SmsWebhookBox.Text = settings.Integrations.SmsWebhookUrl;
         EmailWebhookBox.Text = settings.Integrations.EmailWebhookUrl;
+        SmtpHostBox.Text = settings.Integrations.SmtpHost;
+        SmtpPortBox.Text = settings.Integrations.SmtpPort.ToString(CultureInfo.InvariantCulture);
+        SmtpUserBox.Text = settings.Integrations.SmtpUser;
+        SmtpTlsBox.IsChecked = settings.Integrations.SmtpUseTls;
+        if (SmtpCredentialStatusText is not null)
+            SmtpCredentialStatusText.Text = _automation?.HasSmtpPassword == true ? "Password saved securely" : "No password saved";
+        if (GoogleConnectionStatusText is not null)
+            GoogleConnectionStatusText.Text = settings.Integrations.GoogleSheetsConnected ? "Connected" :
+                _automation?.HasGoogleClientSecret == true ? "OAuth credentials saved" : "Not connected";
         if (DatabaseStatusText is not null) DatabaseStatusText.Text = $"Local JSON: {_store.DataPath}";
-        if (SettingsStatusText is not null) SettingsStatusText.Text = $"Last saved: {_store.LastSavedAt.ToString("g", CultureInfo.CurrentCulture)}";
+        if (SettingsStatusText is not null)
+        {
+            var latestIssue = _store.Data.Notifications
+                .Where(item => !item.Delivered &&
+                    (item.Type.Contains("Google", StringComparison.OrdinalIgnoreCase) ||
+                     item.Type.Contains("SMTP", StringComparison.OrdinalIgnoreCase) ||
+                     item.Type.Contains("report", StringComparison.OrdinalIgnoreCase) ||
+                     item.Type.Equals("Automation", StringComparison.OrdinalIgnoreCase) ||
+                     item.Message.Contains("not sent", StringComparison.OrdinalIgnoreCase)))
+                .OrderByDescending(item => item.CreatedAt)
+                .FirstOrDefault();
+            SettingsStatusText.Text = latestIssue?.Message ??
+                                      $"Last saved: {_store.LastSavedAt.ToString("g", CultureInfo.CurrentCulture)}";
+        }
         TaxNameBox.Text = _store.Data.Tax.Name; TaxRateBox.Text = _store.Data.Tax.Rate.ToString("0.##"); TaxInclusiveBox.IsChecked = _store.Data.Tax.Inclusive;
         RoleCombo.SelectedIndex = 0;
     }
 
     private void SaveSettings_Click(object sender, RoutedEventArgs e)
     {
+        _settingsSaveSucceeded = false;
         if (!RequireAdmin()) return;
         var s = _store.Data.Settings;
         var businessEmail = BusinessEmailBox.Text.Trim();
+        var ownerEmail = OwnerEmailBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(BusinessNameBox.Text))
         { MessageBox.Show("Enter a business name before saving.", "Business name required"); return; }
         if (businessEmail.Length > 0 && !System.Net.Mail.MailAddress.TryCreate(businessEmail, out _))
         { MessageBox.Show("Enter a valid business email address, or leave the field blank.", "Invalid email"); return; }
+        if (!System.Net.Mail.MailAddress.TryCreate(ownerEmail, out _))
+        { MessageBox.Show("Enter a valid owner email address for alerts and reports.", "Invalid owner email"); return; }
+        if (!TimeOnly.TryParse(ReportSendTimeBox.Text.Trim(), CultureInfo.CurrentCulture, out var reportSendTime))
+        { MessageBox.Show("Enter a report send time in HH:mm format.", "Invalid report time"); return; }
+        TimeZoneInfo reportTimeZone;
+        try { reportTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ReportTimeZoneBox.Text.Trim()); }
+        catch (TimeZoneNotFoundException) { MessageBox.Show("Enter a valid Windows time-zone ID.", "Invalid time zone"); return; }
+        catch (InvalidTimeZoneException) { MessageBox.Show("The selected time zone is invalid.", "Invalid time zone"); return; }
+        if (!int.TryParse(SmtpPortBox.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var smtpPort) ||
+            smtpPort is < 1 or > 65535)
+        { MessageBox.Show("Enter a valid SMTP port between 1 and 65535.", "Invalid SMTP port"); return; }
         if (!decimal.TryParse(LowStockThresholdBox.Text, out var threshold) || threshold < 0)
         { MessageBox.Show("Enter a valid low-stock threshold."); return; }
         if (CurrencySymbolCombo.SelectedValue is not string currency)
@@ -1316,9 +1377,18 @@ public partial class MainWindow : Window
         s.Country = BusinessCountryBox.Text.Trim(); s.Phone = BusinessPhoneBox.Text.Trim();
         s.ReceiptFooter = ReceiptFooterBox.Text.Trim(); s.CurrencySymbol = currency;
         s.BusinessType = BusinessTypeCombo.SelectedValue is BusinessType type ? type : BusinessType.Other;
-        s.CompanyLogoPath = logoPath; s.LowStockAlertThreshold = threshold; s.LowStockOwnerEmail = OwnerEmailBox.Text.Trim();
-        s.Reports.OwnerEmail = s.LowStockOwnerEmail;
+        s.CompanyLogoPath = logoPath; s.LowStockAlertThreshold = threshold;
+        s.OwnerEmail = ownerEmail;
+        s.LowStockOwnerEmail = ownerEmail;
+        s.Reports.OwnerEmail = ownerEmail;
+        s.Reports.Daily = DailyReportBox.IsChecked == true;
+        s.Reports.Weekly = WeeklyReportBox.IsChecked == true;
+        s.Reports.Monthly = MonthlyReportBox.IsChecked == true;
+        s.Reports.SendTime = reportSendTime.ToString("HH:mm", CultureInfo.InvariantCulture);
+        s.Reports.TimeZone = reportTimeZone.Id;
+        s.TimeZone = reportTimeZone.Id;
         s.EnableSaleNotifications = SaleNotificationsBox.IsChecked == true;
+        s.SaleEmailAlerts = SaleEmailAlertsBox.IsChecked == true;
         s.EnableOwnerEmailAlerts = OwnerEmailAlertsBox.IsChecked == true;
         s.Notifications.SaleTimestampNotifications = SaleNotificationsBox.IsChecked == true;
         s.Notifications.LowStockOwnerEmailAlerts = OwnerEmailAlertsBox.IsChecked == true;
@@ -1327,6 +1397,24 @@ public partial class MainWindow : Window
         s.Integrations.GoogleDriveFolderId = GoogleDriveFolderBox.Text.Trim();
         s.Integrations.GoogleSheetsSpreadsheetId = GoogleSheetsIdBox.Text.Trim();
         s.Integrations.GoogleSheetsWorksheet = GoogleSheetsTabBox.Text.Trim();
+        var googleClientId = GoogleOAuthClientIdBox.Text.Trim();
+        if (!string.IsNullOrWhiteSpace(s.Integrations.GoogleOAuthClientId) &&
+            !s.Integrations.GoogleOAuthClientId.Equals(googleClientId, StringComparison.Ordinal))
+        {
+            _automation.DisconnectGoogle();
+            s.Integrations.GoogleSheetsConnected = false;
+        }
+        s.Integrations.GoogleOAuthClientId = googleClientId;
+        if (!string.IsNullOrWhiteSpace(GoogleOAuthClientSecretBox.Password))
+            _automation.SaveGoogleClientSecret(GoogleOAuthClientSecretBox.Password);
+        GoogleOAuthClientSecretBox.Clear();
+        s.Integrations.SmtpHost = SmtpHostBox.Text.Trim();
+        s.Integrations.SmtpPort = smtpPort;
+        s.Integrations.SmtpUser = SmtpUserBox.Text.Trim();
+        s.Integrations.SmtpUseTls = SmtpTlsBox.IsChecked == true;
+        if (!string.IsNullOrEmpty(SmtpPasswordBox.Password))
+            _automation.SaveSmtpPassword(SmtpPasswordBox.Password);
+        SmtpPasswordBox.Clear();
         s.Integrations.WhatsAppWebhookUrl = WhatsAppWebhookBox.Text.Trim();
         s.Integrations.SmsWebhookUrl = SmsWebhookBox.Text.Trim();
         s.Integrations.EmailWebhookUrl = EmailWebhookBox.Text.Trim();
@@ -1338,6 +1426,7 @@ public partial class MainWindow : Window
         s.Integrations.LastSyncMessage = s.Integrations.SyncStatus == IntegrationConnectionStatus.Ready
             ? "Configured; sync is opt-in and sales remain local until a sync is requested." : "Local-only mode; no online integration configured.";
         _store.Save();
+        _settingsSaveSucceeded = true;
         ApplyCurrencyCulture();
         LoadSettings();
         Refresh();
@@ -1437,7 +1526,7 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog { Filter = "TILVEX POS JSON|*.json" };
         if (dialog.ShowDialog() != true) return;
-        try { _store.ImportJson(dialog.FileName); _integration = new HttpIntegrationService(_store.Data.Settings.Integrations); LoadSettings(); Refresh(); DatabaseStatusText.Text = $"Imported {dialog.FileName}"; }
+        try { _store.ImportJson(dialog.FileName); _integration = new HttpIntegrationService(_store.Data.Settings.Integrations); _automation = new OwnerAutomationService(_store.Data); LoadSettings(); Refresh(); DatabaseStatusText.Text = $"Imported {dialog.FileName}"; }
         catch (Exception ex) { MessageBox.Show($"Import failed: {ex.Message}"); }
     }
 
@@ -1465,16 +1554,295 @@ public partial class MainWindow : Window
         if (!settings.Notifications.LowStockOwnerEmailAlerts || lowStock.Count == 0) return;
         var message = $"Low-stock alert for {settings.BusinessName}: " +
                       string.Join(", ", lowStock.Select(p => $"{p.Name} ({p.StockQuantity} {p.UnitLabel})"));
-        var result = await _integration.SendNotificationAsync("email", message);
+        await SendOwnerNotificationAsync("LowStock", "TILVEX low-stock alert", message);
+    }
+
+    private async Task SendOwnerNotificationAsync(string type, string subject, string body)
+    {
+        var message = new EmailOutboxMessage { Type = type, Subject = subject, Body = body };
+        _store.Data.EmailOutbox.Add(message);
+        _store.Save();
+        await DeliverEmailOutboxMessageAsync(message);
+    }
+
+    private async Task RunEmailOutboxAsync()
+    {
+        foreach (var message in _store.Data.EmailOutbox
+                     .Where(item => !item.Delivered)
+                     .OrderBy(item => item.CreatedAt))
+        {
+            if (message.LastAttemptAt.HasValue &&
+                DateTime.Now - message.LastAttemptAt.Value < TimeSpan.FromMinutes(5))
+                continue;
+            await DeliverEmailOutboxMessageAsync(message);
+            if (!message.Delivered)
+                break;
+        }
+    }
+
+    private async Task DeliverEmailOutboxMessageAsync(EmailOutboxMessage message)
+    {
+        message.Attempts++;
+        message.LastAttemptAt = DateTime.Now;
+        _store.Save();
+        var result = await _automation.SendEmailAsync(message.Subject, message.Body, message.Id);
+        message.Delivered = result.Success;
+        message.LastError = result.Success ? "" : result.Message;
         _store.Data.Notifications.Add(new NotificationRecord
         {
-            Type = "LowStock",
-            Message = result.Success ? message : $"Low-stock email not sent: {result.Message}",
+            Type = message.Type,
+            Message = result.Success
+                ? $"{message.Subject}: {result.Message}"
+                : $"{message.Subject} was not sent: {result.Message}",
             Delivered = result.Success
         });
-        _store.Data.Settings.Integrations.LastSyncMessage = result.Message;
+        _store.Data.AuditEvents.Add(new AuditEvent
+        {
+            Actor = "TILVEX automation",
+            Type = "Email delivery",
+            Summary = $"{message.Type} email {(result.Success ? "delivered" : "failed")}",
+            Details = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                message.Id,
+                message.Type,
+                message.Attempts,
+                result.Success
+            })
+        });
+        if (!result.Success)
+            _store.Data.Settings.Integrations.LastSyncMessage = result.Message;
         _store.Save();
-        Dispatcher.Invoke(Refresh);
+        if (Dispatcher.CheckAccess()) Refresh();
+        else await Dispatcher.InvokeAsync(Refresh);
+    }
+
+    private async Task RunAutomationsAsync()
+    {
+        if (_automationRunning || !IsLoaded) return;
+        _automationRunning = true;
+        try
+        {
+            await RunScheduledReportsAsync();
+            await RunEmailOutboxAsync();
+            var integration = _store.Data.Settings.Integrations;
+            if (integration.GoogleSheetsConnected && _store.Data.AuditEvents.Any(item => !item.SheetsSynced) &&
+                CanRetryAutomation("sheets", TimeSpan.FromMinutes(5)))
+            {
+                var result = await _automation.SyncAuditEventsAsync();
+                integration.SyncStatus = result.Status;
+                integration.LastSyncMessage = result.Message;
+                if (result.Success)
+                {
+                    integration.LastSyncAt = DateTime.Now;
+                    _store.Save();
+                    _automationRetryAt.Remove("sheets");
+                }
+                else
+                {
+                    _store.Data.Notifications.Add(new NotificationRecord
+                    {
+                        Type = "Google Sheets",
+                        Message = result.Message,
+                        Delivered = false
+                    });
+                    _automationRetryAt["sheets"] = DateTime.Now;
+                    _store.Save();
+                    NotificationStatusText.Text = result.Message;
+                    SettingsStatusText.Text = result.Message;
+                }
+                if (GoogleConnectionStatusText is not null)
+                    GoogleConnectionStatusText.Text = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            var notification = new NotificationRecord
+            {
+                Type = "Automation",
+                Message = $"Background automation error: {ex.Message}",
+                Delivered = false
+            };
+            _store.Data.Notifications.Add(notification);
+            _store.Save();
+            NotificationStatusText.Text = notification.Message;
+            SettingsStatusText.Text = notification.Message;
+        }
+        finally
+        {
+            _automationRunning = false;
+        }
+    }
+
+    private bool CanRetryAutomation(string key, TimeSpan interval) =>
+        !_automationRetryAt.TryGetValue(key, out var lastAttempt) || DateTime.Now - lastAttempt >= interval;
+
+    private async Task RunScheduledReportsAsync()
+    {
+        var reports = _store.Data.Settings.Reports;
+        if (!TimeOnly.TryParse(reports.SendTime, CultureInfo.InvariantCulture, out var sendTime))
+            sendTime = new TimeOnly(20, 0);
+        TimeZoneInfo timeZone;
+        try { timeZone = TimeZoneInfo.FindSystemTimeZoneById(reports.TimeZone); }
+        catch (TimeZoneNotFoundException) { timeZone = TimeZoneInfo.Local; }
+        catch (InvalidTimeZoneException) { timeZone = TimeZoneInfo.Local; }
+        var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone).DateTime;
+
+        if (reports.Daily)
+        {
+            var target = localNow.TimeOfDay >= sendTime.ToTimeSpan() ? localNow.Date : localNow.Date.AddDays(-1);
+            if (localNow.TimeOfDay >= sendTime.ToTimeSpan() || !string.IsNullOrWhiteSpace(reports.LastDailyPeriodSent))
+                await SendDueReportsAsync("daily", reports.LastDailyPeriodSent, target, reports,
+                    date => (date, date.AddDays(1)), timeZone);
+        }
+
+        var dayOffset = ((int)localNow.DayOfWeek + 6) % 7;
+        var currentWeekStart = localNow.Date.AddDays(-dayOffset);
+        var weeklyScheduleDue = localNow.Date > currentWeekStart ||
+                                localNow.TimeOfDay >= sendTime.ToTimeSpan();
+        if (reports.Weekly && weeklyScheduleDue)
+        {
+            var target = currentWeekStart.AddDays(-7);
+            await SendDueReportsAsync("weekly", reports.LastWeeklyPeriodSent, target, reports,
+                date => (date, date.AddDays(7)), timeZone);
+        }
+
+        var monthStart = new DateTime(localNow.Year, localNow.Month, 1);
+        var monthlyScheduleDue = localNow.Date > monthStart.Date ||
+                                 localNow.TimeOfDay >= sendTime.ToTimeSpan();
+        if (reports.Monthly && monthlyScheduleDue)
+        {
+            var target = monthStart.AddMonths(-1);
+            await SendDueReportsAsync("monthly", reports.LastMonthlyPeriodSent, target, reports,
+                date => (date, date.AddMonths(1)), timeZone);
+        }
+    }
+
+    private async Task SendDueReportsAsync(
+        string cadence,
+        string? lastPeriodSent,
+        DateTime targetPeriod,
+        ReportSettings settings,
+        Func<DateTime, (DateTime From, DateTime To)> getRange,
+        TimeZoneInfo timeZone)
+    {
+        var retryKey = $"report-{cadence}";
+        if (!CanRetryAutomation(retryKey, TimeSpan.FromMinutes(5))) return;
+        var hasLast = DateTime.TryParseExact(lastPeriodSent, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var last);
+        var period = hasLast
+            ? cadence switch
+            {
+                "daily" => last.Date.AddDays(1),
+                "weekly" => last.Date.AddDays(7),
+                _ => last.Date.AddMonths(1)
+            }
+            : targetPeriod;
+        if (period > targetPeriod) return;
+
+        for (var sent = 0; period <= targetPeriod && sent < 100; sent++)
+        {
+            var key = period.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var (from, to) = getRange(period);
+            var report = OwnerReportBuilder.Build(_store.Data, from, to, cadence, timeZone);
+            var result = await _automation.SendEmailAsync(
+                $"{_store.Data.Settings.BusinessName} {cadence} report — {key}", report);
+            _store.Data.Notifications.Add(new NotificationRecord
+            {
+                Type = $"{cadence} report",
+                Message = result.Success ? result.Message : $"Report for {key} was not sent: {result.Message}",
+                Delivered = result.Success
+            });
+            _store.Data.AuditEvents.Add(new AuditEvent
+            {
+                Actor = "TILVEX automation",
+                Type = "Owner report",
+                Summary = $"{cadence} report for {key} {(result.Success ? "delivered" : "failed")}",
+                Details = System.Text.Json.JsonSerializer.Serialize(new { cadence, Period = key, result.Success })
+            });
+            if (!result.Success)
+            {
+                _automationRetryAt[retryKey] = DateTime.Now;
+                _store.Save();
+                SettingsStatusText.Text = result.Message;
+                NotificationStatusText.Text = result.Message;
+                return;
+            }
+
+            SettingsStatusText.Text = result.Message;
+            NotificationStatusText.Text = result.Message;
+            switch (cadence)
+            {
+                case "daily": settings.LastDailyPeriodSent = key; break;
+                case "weekly": settings.LastWeeklyPeriodSent = key; break;
+                case "monthly": settings.LastMonthlyPeriodSent = key; break;
+            }
+            _store.Save();
+            period = cadence switch
+            {
+                "daily" => period.AddDays(1),
+                "weekly" => period.AddDays(7),
+                _ => period.AddMonths(1)
+            };
+        }
+
+        _automationRetryAt.Remove(retryKey);
+    }
+
+    private async void TestSmtp_Click(object sender, RoutedEventArgs e)
+    {
+        if (!RequireAdmin()) return;
+        SaveSettings_Click(sender, e);
+        if (!_settingsSaveSucceeded) return;
+        var result = await _automation.SendEmailAsync("TILVEX SMTP test", "Your TILVEX owner email connection is working.");
+        RecordConnectionResult("SMTP test", result);
+    }
+
+    private async void ConnectGoogleSheets_Click(object sender, RoutedEventArgs e)
+    {
+        if (!RequireAdmin()) return;
+        SaveSettings_Click(sender, e);
+        if (!_settingsSaveSucceeded) return;
+        GoogleConnectionStatusText.Text = "Waiting for Google sign-in…";
+        var result = await _automation.ConnectGoogleAsync();
+        _store.Data.Settings.Integrations.GoogleSheetsConnected = result.Success;
+        _store.Data.Settings.Integrations.SyncStatus = result.Status;
+        _store.Data.Settings.Integrations.LastSyncMessage = result.Message;
+        RecordConnectionResult("Google Sheets", result);
+        LoadSettings();
+        if (result.Success) await RunAutomationsAsync();
+    }
+
+    private void DisconnectGoogleSheets_Click(object sender, RoutedEventArgs e)
+    {
+        if (!RequireAdmin()) return;
+        _automation.DisconnectGoogle();
+        _store.Data.Settings.Integrations.GoogleSheetsConnected = false;
+        _store.Data.Settings.Integrations.SyncStatus = IntegrationConnectionStatus.Offline;
+        _store.Data.Settings.Integrations.LastSyncMessage = "Google Sheets disconnected; activity remains queued locally.";
+        _store.Save();
+        LoadSettings();
+    }
+
+    private async void SyncActivityNow_Click(object sender, RoutedEventArgs e)
+    {
+        if (!RequireAdmin()) return;
+        var result = await _automation.SyncAuditEventsAsync();
+        if (result.Success) _store.Save();
+        RecordConnectionResult("Google Sheets", result);
+    }
+
+    private void RecordConnectionResult(string type, IntegrationResult result)
+    {
+        if (!result.Success)
+            _store.Data.Notifications.Add(new NotificationRecord { Type = type, Message = result.Message });
+        _store.Data.Settings.Integrations.LastSyncMessage = result.Message;
+        _store.Data.Settings.Integrations.SyncStatus = result.Status;
+        _store.Save();
+        SettingsStatusText.Text = result.Message;
+        if (type.StartsWith("Google", StringComparison.Ordinal))
+            GoogleConnectionStatusText.Text = result.Message;
+        if (type.StartsWith("SMTP", StringComparison.Ordinal))
+            SmtpCredentialStatusText.Text = result.Message;
     }
 
     private async void SyncNow_Click(object sender, RoutedEventArgs e)
